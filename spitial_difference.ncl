@@ -25,7 +25,7 @@ var_name= (/\
            /)
            ;"LAI" ; the same in Groundwater_on and Groundwater_off
 
-Soil_thickness = (/0.022, 0.058, 0.154, 0.409, 1.085, 2.872, 20./) ; 6 soil layers and 1 aquifer
+Soil_thickness = (/0.022, 0.058, 0.154, 0.409, 1.085, 2.872/) ; 6 soil layers
 
 
 ;______________________________ Data _________________________________
