@@ -8,10 +8,15 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 begin
 
 case_name = (/\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs/gw_off",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs/gw_on",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs/gw_on"\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-Haverd2013/gw_on",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs-Haverd2013/gw_on"\
              /)
+
+             ;"/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs/gw_off",\
+             ;"/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para_redistrb-on/Outputs/gw_off"\
+
+             ;"/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs/gw_on",\
+             ;"/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs/gw_on",\
 
 var_name= (/\
            "Evap","TVeg","ESoil",\ ;"kg/m^2/s"
@@ -26,10 +31,10 @@ var_name= (/\
            ;"LAI" ; the same in Groundwater_on and Groundwater_off
 
 Soil_thickness = (/0.022, 0.058, 0.154, 0.409, 1.085, 2.872, 20./) ; 6 soil layers and 1 aquifer
-case_compare = "gw_on_vs_gw_off"
+case_compare = "gw_on_Haverd2013_vs_gw_norecharge_Haverd2013"
 ;month_name= (/"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"/)
 ;season_name= (/"Spr","Sum","Aut","Win"/)
-time_scale = "seasonal" ;"annual" ; "seasonal", "monthly", "all"
+time_scale = "all" ;"annual" ; "seasonal", "monthly", "all"
 
 ;print(time_scale .eq. "seasonal")
 
