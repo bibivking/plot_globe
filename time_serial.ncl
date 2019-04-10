@@ -68,9 +68,6 @@ do case_num = 0,2
                var(case_num, var_num, counter) = avg(f->$var_name(var_num)$(month,{-38:-28},{140.5:154}))*3600*24*dom(month)
             else if (var_num .le. 8) then
                var(case_num, var_num, counter) = avg(f->$var_name(var_num)$(month,{-38:-28},{140.5:154}))
-            else if (var_num .eq. 9 .and. case_num .ne. 2) then
-               var(case_num, var_num, counter) = avg(f->$var_name(var_num)$(month,{-38:-28},{140.5:154}))
-            end if
             end if
             end if
          end do ;var_num
