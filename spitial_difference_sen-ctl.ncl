@@ -57,7 +57,7 @@ do year = year_s,year_e
     end if
 
 filename1 = case_name(case_num)+"/cable_out_"+year+".nc"
-filename2 = case_name(case_num+2)+"/cable_out_"+year+".nc"
+filename2 = case_name(case_num+3)+"/cable_out_"+year+".nc"
 
 f1 = addfile (filename1,"r")
 f2 = addfile (filename2,"r")
@@ -237,7 +237,7 @@ end do
 
 ; "Qle" "W/m^2"
   res@cnFillPalette = "ViBlGrWhYeOrRe"
-  pres@txString = f1->$var_name(5)$@long_name+" ("+f->$var_name(5)$@units+")"
+  pres@txString = f1->$var_name(5)$@long_name+" ("+f1->$var_name(5)$@units+")"
   levels = (/-30.,-25.,-20.,-15.,-10.,-5.,5.,10.,15.,20.,25.,30./)
   res@cnLevels = levels
   res@tiMainString = "(a) GW"
@@ -256,7 +256,7 @@ end do
 
 ; "Qh" ;"W/m^2"
   res@cnFillPalette = "ViBlGrWhYeOrRe"
-  pres@txString = f1->$var_name(6)$@long_name+" ("+f->$var_name(6)$@units+")"
+  pres@txString = f1->$var_name(6)$@long_name+" ("+f1->$var_name(6)$@units+")"
   levels = (/-40.,-35.,-30.,-25.,-20.,-15.,-10.,-5.,5.,10.,15.,20.,25.,30.,35.,40./)
   res@cnLevels = levels
   res@tiMainString = "(a) GW"
@@ -277,7 +277,7 @@ end do
 
 ; "GPP"
   res@cnFillPalette = "ViBlGrWhYeOrRe"
-  pres@txString = f1->GPP@long_name+" ("+f->GPP@units+")"
+  pres@txString = f1->GPP@long_name+" ("+f1->GPP@units+")"
   levels = (/-2.5,-2.,-1.5,-1.,-0.5,-0.2,0.2,0.5,1.,1.5,2.,2.5/)
   res@cnLevels = levels
   res@tiMainString = "(a) GW"
@@ -296,7 +296,7 @@ end do
 
 ;"NPP"
   res@cnFillPalette = "ViBlGrWhYeOrRe"
-  pres@txString = f1->NPP@long_name+" ("+f->NPP@units+")"
+  pres@txString = f1->NPP@long_name+" ("+f1->NPP@units+")"
   levels = (/-2.5,-2.,-1.5,-1.,-0.5,-0.2,0.2,0.5,1.,1.5,2.,2.5/)
   res@cnLevels = levels
   res@tiMainString = "(a) GW"
