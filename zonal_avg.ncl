@@ -8,9 +8,11 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 begin
 
 case_name = (/\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs/gw_on/",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs/gw_on/",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs/gw_off/"\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-standard/gw_on/",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs-standard/gw_on/",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs-standard/gw_off/",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on/Outputs/gw_on/",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off/Outputs/gw_off/"\
              /)
              
 var_name= (/\
@@ -34,16 +36,16 @@ year_sum = year_e-year_s+1
 var_sum  = dimsizes(var_name)
 total = year_sum * 12
 
-var = new((/3,10,360/),float)
+var = new((/5,10,360/),float)
 var = 0.0
-Moist = new((/3,7,360/),float)
+Moist = new((/5,7,360/),float)
 Moist = 0.0
-TWS   = new((/3,360/),float)
+TWS   = new((/5,360/),float)
 TWS   = 0.0
 
 
 ;______________________________________ process data _________________________________
-do case_num = 0,2
+do case_num = 0,4
    print(case_name(case_num))
 
    do year = year_s,year_e
@@ -129,10 +131,10 @@ pres@lbTitlePosition    = "Bottom";Right"
 
 plots = new(5,graphic)
 
-res@xyLineThicknesses  = (/  2.0, 2.0, 2.0/)          ; make second line thicker
-res@xyLineColors       = (/"blue","red","darkgreen"/)          ; change line color
-res@xyExplicitLegendLabels = (/"GW","Norecharge","NoGW"/)
-res@xyDashPatterns    = (/0,0,0/)
+res@xyLineThicknesses  = (/  2.0, 2.0, 2.0, 2.0, 2.0/)          ; make second line thicker
+res@xyLineColors       = (/"blue","red","darkgreen","cyan","green"/)          ; change line color
+res@xyExplicitLegendLabels = (/"GW","Norecharge","NoGW","GW-CTL","NoGW-CTL"/)
+res@xyDashPatterns    = (/0,0,0,0,0/)
 
 ;res@trYMinF = 0
 ;res@trYMaxF = 1.3*max(var(:,0,:))
