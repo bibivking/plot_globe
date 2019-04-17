@@ -126,24 +126,7 @@ uncertainty!2 = "lon"
 uncertainty&lat = f->Qle&y
 uncertainty&lon = f->Qle&x
 
-; __________________________ Deseasonalize _____________________________
-; rmMonAnnCycTLL : Removes the annual cycle from "monthly" data.
-if deseason .eq. True then
-  print(deseason)
-
-  GRACE = rmMonAnnCycTLL(GRACE) ; dimensioned time x lat x lon
-
-  plot = gsn_csm_contour_map(wks,dim_avg_n_Wrap(GRACE(:,:,:),0),res)
-  plot = gsn_csm_contour(wks,dim_avg_n_Wrap(GRACE(:,:,:),0)*1.0,res)
-
-  do case_num = 0,6
-    TWS(case_num,:,:,:) = rmMonAnnCycTLL(TWS(case_num,:,:,:))
-    plot = gsn_csm_contour_map(wks,dim_avg_n_Wrap(TWS(case_num,:,:,:),0),res)
-    plot = gsn_csm_contour(wks,dim_avg_n_Wrap(TWS(case_num,:,:,:),0)*1.0,res)
-  end do
-end if
-
-; __________________________________  Global AVE  ______________________________________
+; _________________________________  Global AVE  ______________________________________
 GRACE_global_ave       = new(96,float)
 uncertainty_global_ave = new((/7,96/),float)
 TWS_global_ave         = new((/7,96/),float)
@@ -167,7 +150,7 @@ do case_num = 0,6
 end do
 
 
-; ________________________________ Calculate Variance ___________________________________
+; ______________________________ Calculate Variance __________________________________
 GRACE_variance = dim_variance_n_Wrap(GRACE,0)
 TWS_variance   = dim_variance_n_Wrap(TWS,1)
 
@@ -178,7 +161,35 @@ do case_num = 0,6
    variance_diff(case_num,:,:) = TWS_variance(case_num,:,:) - GRACE_variance
 end do
 
+; ____________________________ Deseasonalize & Detrend ________________________________
+GRACE = rmMonAnnCycTLL(GRACE) ; dimensioned time x lat x lon
+do case_num = 0,6
+   TWS(case_num,:,:,:) = rmMonAnnCycTLL(TWS(case_num,:,:,:))
+end do
 
+GRACE = dtrend_n(GRACE, True, 0)
+TWS   = dtrend_n(TWS,   True, 1)
+
+GRACE_year = new((/8,360,720/),float)
+TWS_year   = new((/7,8,360,720/),float)
+
+do year = year_s,year_e
+   a = (year-year_s)*12
+   b = (year-year_s)*12 +11
+   GRACE_year(year-year_s,:,:) = dim_avg_n_Wrap(GRACE(a:b,:,:),0)
+   TWS_year(:,year-year_s,:,:) = dim_avg_n_Wrap(TWS(:,a:b,:,:),1)
+end do
+
+; ____________________________ Calculate fraction of IAV ________________________________
+GRACE_FIAV = new((/360,720/),float)
+TWS_FIAV   = new((/7,360,720/),float)
+
+GRACE_FIAV = dim_variance_n_Wrap(GRACE_year,0)/dim_variance_n_Wrap(GRACE,0)
+TWS_FIAV   = dim_variance_n_Wrap(TWS_year,1)/dim_variance_n_Wrap(TWS,1)
+
+
+
+plot & add attribution
 ;_____________________________ PLOT ___________________________________
 if deseason .eq. True then
    pic = GRACE_opt+"-GRACE_TWS_correl_"+scale+"_deseasonal_"+year_s+"-"+year_e
