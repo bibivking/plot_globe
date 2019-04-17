@@ -7,12 +7,47 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 
 begin
 
+case_name = (/\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs-standard/gw_off",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para_redistrb-on/Outputs-standard/gw_off",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs-Haverd2013/gw_off",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-standard/gw_on",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs-standard/gw_on",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-Haverd2013/gw_on",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs-Haverd2013/gw_on"\
+             /)
+
+case_name_brf = (/\
+              "off-std",\
+              "off-redstrb-std",\
+              "off-Hvrd",\
+              "on-std",\
+              "on_norchrg-std",\
+              "on-Hvrd",\
+              "on_norchrg-Hvrd"\
+               /)
 ; ____________________________ Options _______________________________
+
+scale = "World" ; "AU"
+
+
 ; fill gap for 2003 June
 year_s = 2003
 year_e = 2010
 year_sum = year_e-year_s+1
 var_sum  = dimsizes(var_name)
+
+; _____________________________ Check ______________________________
+pic = "check"
+wks = gsn_open_wks("pdf",pic)
+gsn_define_colormap(wks,"ViBlGrWhYeOrRe")
+res = True
+res@cnFillMode         = "RasterFill"            ; Raster Mode
+res@cnFillOn           = True                            ;��ɫ
+res@tmBorderThicknessF = 3.0
+res@cnLinesOn          = False                       ; �رյ�ֵ������
+res@gsnDraw            = True  ; Don't draw plots
+res@gsnFrame           = True  ; ����ҳ
 
 ; _______________________ read GRACE and fill gap ____________________________
 GRACE      = new((/96,360,720/),float)
@@ -38,6 +73,9 @@ Jul_ave = 0.
 GRACE@_FillValue       = f->lwe_thickness@_FillValue
 uncertainty@_FillValue = f->lwe_thickness@_FillValue
 
+
+plot = gsn_csm_contour(wks,dim_avg_n_Wrap(GRACE,0),res)
+
 do year = year_s+1,year_e
 
 Jun_ave = Jun_ave + GRACE((year-year_s)*12+5,:,:)
@@ -48,11 +86,18 @@ end do
 Jun_ave = Jun_ave/(year_e-year_s)
 Jul_ave = Jul_ave/(year_e-year_s)
 
+plot = gsn_csm_contour(wks,Jun_ave,res)
+plot = gsn_csm_contour(wks,Jul_ave,res)
+
 GRACE(5,:,:) = GRACE(6,:,:) * (Jun_ave/Jul_ave)
 uncertainty(5,:,:) = (uncertainty(4,:,:) + uncertainty(6,:,:))/2.
 
 delete(Jun_ave)
 delete(Jul_ave)
+
+plot = gsn_csm_contour(wks,GRACE(5,:,:),res)
+plot = gsn_csm_contour(wks,uncertainty(5,:,:),res)
+
 
 
 
@@ -64,34 +109,28 @@ TWS_ave = 0.0
 
 do case_num = 0,6
 
-print(case_name(case_num))
+   print(case_name(case_num))
 
-counter = 0
+   counter = 0
 
-do year = year_s,year_e
-  print("year = " +year)
-  if ( mod(year,4) .eq. 0) then
-     dom = (/31,29,31,30,31,30,31,31,30,31,30,31/)
-  else
-     dom = (/31,28,31,30,31,30,31,31,30,31,30,31/)
-  end if
+   do year = year_s,year_e
+      print("year = " +year)
+    
+      filename = case_name(case_num)+"/cable_out_"+year+".nc"
+      f = addfile (filename,"r")
 
-  filename = case_name(case_num)+"/cable_out_"+year+".nc"
-  f = addfile (filename,"r")
-
-  do month = 0,11
-     if case_num .le. 2 then
-        TWS(case_num,counter,:,:) = f->SWE(month,:,:) + f->CanopInt(month,:,:)
-     else
-        TWS(case_num,counter,:,:) = f->GWMoist(month,:,:)*f->GWdz*1000. + f->SWE(month,:,:) + f->CanopInt(month,:,:)
-     end if
-     do layer = 0,5
-        TWS(case_num,counter,:,:) = TWS(case_num,counter,:,:) + f->SoilMoist(month,layer,:,:)*Soil_thickness(layer)*1000.
-     end do
-  end if
-  counter = counter + 1
-  end do ;month
-end do ;year
+      do month = 0,11
+         if case_num .le. 2 then
+            TWS(case_num,counter,:,:) = f->SWE(month,:,:) + f->CanopInt(month,:,:)
+         else
+            TWS(case_num,counter,:,:) = f->GWMoist(month,:,:)*f->GWdz*1000. + f->SWE(month,:,:) + f->CanopInt(month,:,:)
+         end if
+         do layer = 0,5
+            TWS(case_num,counter,:,:) = TWS(case_num,counter,:,:) + f->SoilMoist(month,layer,:,:)*Soil_thickness(layer)*1000.
+         end do
+         counter = counter + 1
+      end do ;month
+   end do ;year
 
 end do ;case
 
@@ -128,7 +167,7 @@ uncertainty&lon = f->Qle&x
 
 ; _________________________________  Global AVE  ______________________________________
 GRACE_global_ave       = new(96,float)
-uncertainty_global_ave = new((/7,96/),float)
+uncertainty_global_ave = new(96,float)
 TWS_global_ave         = new((/7,96/),float)
 GRACE_global_ave       = 0.0
 uncertainty_global_ave = 0.0
@@ -147,8 +186,10 @@ end do
 
 do case_num = 0,6
    GRACE_TWS(case_num) = escorc(GRACE_global_ave, TWS_global_ave(case_num,:))
+   print(case_name_brf(case_num)+" "+GRACE_TWS(case_num))
 end do
 
+;GRACE & TWS is anormaly here
 
 ; ______________________________ Calculate Variance __________________________________
 GRACE_variance = dim_variance_n_Wrap(GRACE,0)
@@ -167,6 +208,9 @@ do case_num = 0,6
    TWS(case_num,:,:,:) = rmMonAnnCycTLL(TWS(case_num,:,:,:))
 end do
 
+plot = gsn_csm_contour(wks,GRACE(0,:,:),res)
+plot = gsn_csm_contour(wks,TWS(0,:,:),res)
+
 GRACE = dtrend_n(GRACE, True, 0)
 TWS   = dtrend_n(TWS,   True, 1)
 
@@ -180,6 +224,11 @@ do year = year_s,year_e
    TWS_year(:,year-year_s,:,:) = dim_avg_n_Wrap(TWS(:,a:b,:,:),1)
 end do
 
+plot = gsn_csm_contour(wks,GRACE_year(0,:,:),res)
+plot = gsn_csm_contour(wks,TWS_year(0,:,:),res)
+
+;GRACE & TWS is deseasonalized and detrended here
+
 ; ____________________________ Calculate fraction of IAV ________________________________
 GRACE_FIAV = new((/360,720/),float)
 TWS_FIAV   = new((/7,360,720/),float)
@@ -188,14 +237,37 @@ GRACE_FIAV = dim_variance_n_Wrap(GRACE_year,0)/dim_variance_n_Wrap(GRACE,0)
 TWS_FIAV   = dim_variance_n_Wrap(TWS_year,1)/dim_variance_n_Wrap(TWS,1)
 
 
+delete(GRACE_year)
+delete(TWS_year)
 
-plot & add attribution
+delete(GRACE)
+delete(TWS)
+
+
+printVarSummary(GRACE_FIAV)
+printVarSummary(TWS_FIAV)
+
+GRACE_FIAV!0 = "lat"
+GRACE_FIAV!1 = "lon"
+GRACE_FIAV&lat = f->Qle&y
+GRACE_FIAV&lon = f->Qle&x
+
+TWS_FIAV!0 = "case"
+TWS_FIAV!1 = "lat"
+TWS_FIAV!2 = "lon"
+TWS_FIAV&lat = f->Qle&y
+TWS_FIAV&lon = f->Qle&x
+
+plot = gsn_csm_contour(wks,GRACE_FIAV(0,:,:),res)
+plot = gsn_csm_contour(wks,TWS_FIAV(0,:,:),res)
+
+delete(res)
+delete(pic)
+delete(wks)
+
+
 ;_____________________________ PLOT ___________________________________
-if deseason .eq. True then
-   pic = GRACE_opt+"-GRACE_TWS_correl_"+scale+"_deseasonal_"+year_s+"-"+year_e
-else
-   pic = GRACE_opt+"-GRACE_TWS_correl_"+scale+"_"+year_s+"-"+year_e
-end if
+pic = "GRACE_vs_CABLE_"+scale
 
 wks = gsn_open_wks("pdf",pic)
 gsn_define_colormap(wks,"WhiteBlueGreenYellowRed")
