@@ -5,6 +5,13 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 ;*******************************************
 
+;______ From Mark Decker's code ______
+setvalues NhlGetWorkspaceObjectId()
+  "wsMaximumSize" : 5000000000 ;
+end setvalues
+;_____________________________________
+
+
 begin
 
 case_name = (/\
@@ -285,7 +292,7 @@ res@tmBorderThicknessF = 3.0
 
 res@gsnDraw            = True  ; Don't draw plots
 res@gsnFrame           = True  ; ?????
-res@lbLabelBarOn       = True
+res@lbLabelBarOn       = False ;True
 
 ;************** ????labelbar ***************
 res@lbBoxLinesOn       = True                       ;???lbar box ????
@@ -357,13 +364,13 @@ pres@lbLabelFont        = 25
 pres@lbLabelBarOn       = False ; True                    ; ??????plot??labelbar
 pres@lbTitleFontHeightF = 0.013
 pres@lbLabelFontHeightF = 0.013
-pres@lbAutoManage       = False
+pres@lbAutoManage       = True
 pres@lbTitleDirection   = "Across"             ; title direction
 pres@lbTitlePosition    = "Bottom";Right"
 
 plots = new(10,graphic)
 
-levels = fspan(-10.,10.,21)
+levels = fspan(-20.,20.,21)
 res@cnLevels = levels
 
 res@tiMainString = "GRACE"
