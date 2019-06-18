@@ -18,14 +18,15 @@ case_name = (/\
              /)
 
 case_name_brf = (/\
-               "gw_off-standard",\
-               "gw_off-redistrb_on-standard",\
-               "gw_off-Haverd2013",\
-               "gw_on-standard",\
-               "gw_on_norecharge-standard",\
-               "gw_on-Haverd2013",\
-               "gw_on_norecharge-Haverd2013"\
-                /)
+              "off-std",\
+              "off-redstrb-std",\
+              "off-Hvrd",\
+              "on-std",\
+              "on_norchrg-std",\
+              "on-Hvrd",\
+              "on_norchrg-Hvrd"\
+            /)
+
 
 Precip_data = "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs-standard/gw_off"
 
@@ -40,7 +41,8 @@ Soil_thickness = (/0.022, 0.058, 0.154, 0.409, 1.085, 2.872/) ; 6 soil layers an
 
 ; ____________________________ Options _______________________________
 deseason = True
-scale    = "World";"AU" ; World
+scale    = "World";"World";"AU" ; World
+
 ;______________________________ Data _________________________________
 year_s = 2001
 year_e = 2010
@@ -57,9 +59,20 @@ res1@cnFillOn           = True                            ;��ɫ
 res1@tmBorderThicknessF = 3.0
 res1@cnLinesOn          = False                       ; �رյ�ֵ������
 
+;_______________________________ PFT ___________________________________
+filename = case_name(0)+"/cable_out_"+year_s+".nc"
+f = addfile (filename,"r")
+iveg = f->iveg
+delete(f)
+delete(filename)
 
 ;_____________________________ PLOT ___________________________________
-pic = "Precip_"+var_name(0)+"_correl_"+scale
+if deseason .eq. True then
+   pic = "Precip_"+var_name(0)+"_correl_"+scale+"_deseasonal_"+year_s+"-"+year_e
+else
+   pic = "Precip_"+var_name(0)+"_correl_"+scale+"_"+year_s+"-"+year_e
+end if
+
 wks = gsn_open_wks("pdf",pic)
 gsn_define_colormap(wks,"ViBlGrWhYeOrRe")
 ;"BlueWhiteOrangeRed") ;"BlueYellowRed")             ;����ɫ��
@@ -98,19 +111,38 @@ res@tmYLLabelFontThicknessF = 0.015
 res@tmXBLabelFontHeightF = 0.015
 res@tmYLLabelFontHeightF = 0.015
 
-res@trYMinF            = -60
-res@trYMaxF            = 80
-res@mpMinLatF          = -60
-res@mpMaxLatF          = 80
-res@mpCenterLonF       = 160
+if scale .eq. "World" then
+   res@trYMinF            = -60
+   res@trYMaxF            = 80
+   res@mpMinLatF          = -60
+   res@mpMaxLatF          = 80
+   res@mpCenterLonF       = 160
 
-res@tmYLMode  = "Explicit"             ;��Y����������������,��ʾ�Լ���Ҫ��ֵ
-res@tmYLValues=(/60,30,0,-30,-60/)
-res@tmYLLabels=(/"60~S~o~N~N","30~S~o~N~N","0~S~o~N~","30~S~o~N~S","60~S~o~N~S"/)
-res@tmXBMode  = "Explicit"
-res@tmXBValues=(/240,300,0,60,120,180/)
-res@tmXBLabels=(/"120~S~o~N~W","60~S~o~N~W","0~S~o~N~","60~S~o~N~E","120~S~o~N~E","180~S~o~N~"/)
+   res@tmYLMode  = "Explicit"             ;��Y����������������,��ʾ�Լ���Ҫ��ֵ
+   res@tmYLValues=(/60,30,0,-30,-60/)
+   res@tmYLLabels=(/"60~S~o~N~N","30~S~o~N~N","0~S~o~N~","30~S~o~N~S","60~S~o~N~S"/)
+   res@tmXBMode  = "Explicit"
+   res@tmXBValues=(/240,300,0,60,120,180/)
+   res@tmXBLabels=(/"120~S~o~N~W","60~S~o~N~W","0~S~o~N~","60~S~o~N~E","120~S~o~N~E","180~S~o~N~"/)
+else if scale .eq. "AU" then
+   res@gsnAddCyclic       = False
+   res@trYMinF            = -40
+   res@trYMaxF            = -27
+   res@mpMinLatF          = -40
+   res@mpMaxLatF          = -27
+   res@trXMinF            = 140
+   res@trXMaxF            = 155
+   res@mpMinLonF          = 140
+   res@mpMaxLonF          = 155
 
+   res@tmYLMode  = "Explicit"             ;��Y����������������,��ʾ�Լ���Ҫ��ֵ
+   res@tmYLValues=(/-30,-40/)
+   res@tmYLLabels=(/"30~S~o~N~S","40~S~o~N~S"/)
+   res@tmXBMode  = "Explicit"
+   res@tmXBValues=(/140,150/)
+   res@tmXBLabels=(/"140~S~o~N~E","150~S~o~N~E"/)
+end if
+end if
 ;**************** ͼ�������� *****************
 pres                    = True                                      ; ���� panel resources.
 pres@gsnMaximize        = True
@@ -130,11 +162,8 @@ pres@lbTitlePosition    = "Bottom";Right"
 ;pres@pmLabelBarParallelPosF = 0.
 
 plots = new(7,graphic)
-
-res@cnFillPalette = "ViBlGrWhYeOrRe"
-;levels = (/-1.,-0.9,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0/)
-levels = (/-1.,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1.0/)
-res@cnLevels = levels
+plots1 = new(7,graphic)
+plots2 = new(7,graphic)
 
 ;______________________________ Precip __________________________________
 Precip  = new((/total,360,720/),float)
@@ -170,7 +199,7 @@ delete(f)
 
 
 do case_num = 0,6
-  print(case_name(case_num))
+;  print(case_name(case_num))
 
   ;______________________________ INPUT __________________________________
   var          = new((/total,360,720/),float)
@@ -180,7 +209,7 @@ do case_num = 0,6
   counter      = 0
 
   do year = year_s,year_e
-    print("year = " +year)
+;    print("year = " +year)
 
     filename = case_name(case_num)+"/cable_out_"+year+".nc"
     f = addfile (filename,"r")
@@ -229,20 +258,79 @@ do case_num = 0,6
   Precip_var@_FillValue   = f->Qle@_FillValue
 
   ; _______________________________ PLOT _________________________________
+  ; all PFTs
   res@tiMainString = case_name_brf(case_num)
   if scale .eq. "AU" then
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6,0.7/)
+    res@cnLevels = levels
     print(case_name_brf(case_num)+" "+avg(Precip_var({-40:-27},{140:155})))
     plots(case_num) = gsn_csm_contour_map(wks,Precip_var({-40:-27},{140:155}),res)
   else if scale .eq. "World" then
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6,0.7/)
+    ;levels = (/-1.,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1.0/)
+    res@cnLevels = levels
     print(case_name_brf(case_num)+" "+avg(Precip_var))
     plots(case_num) = gsn_csm_contour_map(wks,Precip_var,res)
   end if
   end if
 
-  delete(Precip_var)
+  ; tmp var for forest & grass
+  tmp   = new((/360,720/),float)
+  tmp   = 0.0
+  tmp!0 = "lat"
+  tmp!1 = "lon"
+  tmp&lat = f->Qle&y
+  tmp&lon = f->Qle&x
+  tmp@_FillValue   = f->Qle@_FillValue
 
+  ; for forest
+  print("for forest")
+  tmp = where(iveg .ge. 1 .and. iveg .le. 4, Precip_var, Precip_var@_FillValue )
+  if scale .eq. "AU" then
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6,0.7/)
+    res@cnLevels = levels
+    print(case_name_brf(case_num)+" "+avg(tmp({-40:-27},{140:155})))
+    plots1(case_num) = gsn_csm_contour_map(wks,tmp({-40:-27},{140:155}),res)
+  else if scale .eq. "World" then
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6,0.7/)
+    ;levels = (/-1.,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1.0/)
+    res@cnLevels = levels
+    print(case_name_brf(case_num)+" "+avg(tmp))
+    plots1(case_num) = gsn_csm_contour_map(wks,tmp,res)
+  end if
+  end if
+
+  ; for grass+shrub+crop
+  print("for grass+shrub+crop")
+  tmp = where(iveg .ge. 5 .and. iveg .le. 11, Precip_var, Precip_var@_FillValue )
+  if scale .eq. "AU" then
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6,0.7/)
+    res@cnLevels = levels
+    print(case_name_brf(case_num)+" "+avg(tmp({-40:-27},{140:155})))
+    plots2(case_num) = gsn_csm_contour_map(wks,tmp({-40:-27},{140:155}),res)
+  else if scale .eq. "World" then
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6,0.7/)
+    ;levels = (/-1.,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1.0/)
+    res@cnLevels = levels
+    print(case_name_brf(case_num)+" "+avg(tmp))
+    plots2(case_num) = gsn_csm_contour_map(wks,tmp,res)
+  end if
+  end if
+
+  delete(Precip_var)
+  delete(tmp)
 end do ;case
 
 gsn_panel(wks,(/plots/),(/4,2/),pres)
+pres@txString = "forest"
+gsn_panel(wks,(/plots1/),(/4,2/),pres)
+pres@txString = "grass+shrub+crop"
+gsn_panel(wks,(/plots2/),(/4,2/),pres)
 
 end

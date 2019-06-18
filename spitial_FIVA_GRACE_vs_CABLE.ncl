@@ -191,7 +191,7 @@ do case_num = 0,case_sum-1
    end do ;year
 end do ;case
 
-; Calculate 2003-2009 TWS average
+; Calculate 2004-2009 TWS average
 TWS_ave =  dim_avg_n_Wrap(TWS(:,12:83,:,:),1)
 
 ; Calculate TWS anormaly

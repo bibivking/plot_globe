@@ -9,9 +9,9 @@ begin
 
 
 case_name = (/\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_debug/Outputs/gw_on",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-standard/gw_on",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs-standard/gw_off",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off/Outputs/gw_off",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on/Outputs/gw_on",\
+              "/g/data1/w35/amu561/GSWP3_runs/Groundwater_on",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs-standard/gw_on"\
             /)
              ; 
@@ -99,67 +99,6 @@ SoilTemp = 0.0
 TWS   = new((/case_sum,year_sum/),float)
 TWS   = 0.0
 
-;var!0 = "case"
-;var!1 = "var"
-;var!2 = "time"
-
-;Moist!0 = "case"
-;Moist!1 = "layer"
-;Moist!2 = "time"
-
-;TWS!0   = "case"
-;TWS!1   = "time"
-
-;____________________________ produce mask_data _______________________________
-filename = "/short/w35/mm3972/cable/src/CABLE-AUX/offline/gridinfo_mmy_MD_elev_orig_landmask.nc"
-f = addfile (filename,"r")
-
-mask_data = f->landsea ;-9999
-
-;do case_num = 0,1
-;   print(case_name(case_num))
-
-;   do year = year_s,year_e
-;      print("year = " +year)
-;      if ( mod(year,4) .eq. 0) then
-;         dom = (/31,29,31,30,31,30,31,31,30,31,30,31/)
-;      else
-;         dom = (/31,28,31,30,31,30,31,31,30,31,30,31/)
-;      end if
-
-;      filename = case_name(case_num)+"/cable_out_"+year+".nc"
-;      f = addfile (filename,"r")
-
-      ;do month = 0,11
-      ;   do var_num = 0,8
-      ;      temp = f->$var_name(var_num)$(month,:,:)
-            ;if (any(isnan_ieee(temp))) then
-            ;   replace_ieeenan (temp, temp@_FillValue, 0)
-            ;end if
-            ;mask_data = where(.not. ismissing(temp) .and. abs(temp) .lt. 10000., mask_data , mask_data@_FillValue)
-            ;delete(temp)
-      ;   end do ;var_num
-
-      ;   do layers = 0,5
-      ;      temp = f->SoilMoist(month,layers,:,:)
-      ;      if (any(isnan_ieee(temp))) then
-      ;         replace_ieeenan (temp, temp@_FillValue, 0)
-      ;      end if
-      ;      mask_data = where(.not. ismissing(temp) .and. abs(temp) .lt. 10000., mask_data , mask_data@_FillValue)
-      ;      delete(temp)
-      ;   end do
-      ;   if (case_num .ne. 1)
-      ;      temp = f->GWMoist(month,:,:)
-      ;      if (any(isnan_ieee(temp))) then
-      ;         replace_ieeenan (temp, temp@_FillValue, 0)
-      ;      end if
-      ;      mask_data = where(.not. ismissing(temp) .and. abs(temp) .lt. 10000., mask_data , mask_data@_FillValue)
-      ;      delete(temp)
-      ;  end if
-     ;end do ;month
-;   end do ;year
-;end do ;case
-
 ;______________________________________ process data _________________________________
 do case_num = 0,case_sum-1
    print(case_name(case_num))
@@ -229,18 +168,20 @@ SMP  = 0.0
 
 do year = year_s,year_e
    print("year = " +year)
-   filename = case_name(0)+"/cable_out_"+year+".nc"
-   f = addfile (filename,"r")
+   filename0 = case_name(1)+"/cable_out_"+year+".nc"
+   f0 = addfile (filename0,"r")
+
+   filename1 = case_name(2)+"/cable_out_"+year+".nc"
+   f1 = addfile (filename1,"r")
 
    time_s = (year-year_s)*12
    time_e = (year-year_s)*12 + 11
-   wb(0,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->SoilMoist(:,:,{A:B},{C:D}),3),2)  ; Actual
-   wb(0,time_s:time_e,6) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->GWMoist(:,{A:B},{C:D}),2),1)        ; Equilibrium
-   wb(1,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->wbeq(:,:,{A:B},{C:D}),3),2)       ; Actual
-   wb(1,time_s:time_e,6) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->GWwbeq(:,{A:B},{C:D}),2),1)         ; Equilibrium
-   SMP(0,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->SMP(:,:,{A:B},{C:D}),3),2)       ; Actual
-   SMP(1,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->zq(:,:,{A:B},{C:D}),3),2)        ; Equilibrium
-   SMP(1,time_s:time_e,6) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->GWzq(:,{A:B},{C:D}),2),1)          ; Equilibrium
+   wb(0,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f0->SoilMoist(:,:,{A:B},{C:D}),3),2)  ; Actual
+   wb(0,time_s:time_e,6)   = dim_avg_n_Wrap(dim_avg_n_Wrap(f0->GWMoist(:,{A:B},{C:D}),2),1)        ; Equilibrium
+   wb(1,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f1->SoilMoist(:,:,{A:B},{C:D}),3),2)       ; Actual
+   wb(1,time_s:time_e,6)   = dim_avg_n_Wrap(dim_avg_n_Wrap(f1->GWMoist(:,{A:B},{C:D}),2),1)         ; Equilibrium
+   SMP(0,time_s:time_e,0:5)= dim_avg_n_Wrap(dim_avg_n_Wrap(f0->SMP(:,:,{A:B},{C:D}),3),2)       ; Actual
+   SMP(1,time_s:time_e,0:5)= dim_avg_n_Wrap(dim_avg_n_Wrap(f1->SMP(:,:,{A:B},{C:D}),3),2)        ; Equilibrium
 end do ;year
 
 printVarSummary(wb)
@@ -255,7 +196,7 @@ SMP@_FillValue  = f->Qle@_FillValue
 ;_____________________________ PLOT ___________________________________
 x = ispan(year_s,year_e,1)
 print(x)
-pic = "Spinup_check_"+scale
+pic = "Spinup_check_vs_Anna_"+scale
 wks = gsn_open_wks("pdf",pic)
 gsn_define_colormap(wks,"rainbow")
 ;"BlueWhiteOrangeRed") ;"BlueYellowRed")             ;����ɫ��
@@ -272,7 +213,7 @@ res@pmLegendHeightF    = 0.11                     ; and height
 res@xyLineThicknesses  = (/  1.0, 1.0, 1.0, 1.0, 1.0, 1.0,1.0/)          ; make second line thicker
 res@pmLegendDisplayMode = "Always"
 res@xyLineColors       = (/"blue","red","green","orange","red","red","red"/)          ; change line color
-res@xyExplicitLegendLabels = (/"Debug","GW","NoGW","NoAQ"/)
+res@xyExplicitLegendLabels = (/"NoGW","GW_1-60","Anna's","NoAQ"/)
 ;res@trYMinF = 0
 
 
@@ -319,7 +260,7 @@ delete(wks)
 ;____________________________ PLOT Soil Equilibrium ____________________________
 x = ispan(1,total,1)
 print(x)
-pic = "Spinup_check_Soil_Equilibrium_"+scale
+pic = "Spinup_check_Soil_Equilibrium_vs_Anna_"+scale
 wks = gsn_open_wks("pdf",pic)
 gsn_define_colormap(wks,"rainbow")
 
@@ -335,7 +276,7 @@ res@pmLegendHeightF    = 0.11                     ; and height
 res@pmLegendDisplayMode    = "Always"
 res@xyLineThicknesses      = (/1.0,1.0/)         ; make second line thicker
 res@xyLineColors           = (/"blue","red"/)
-res@xyExplicitLegendLabels = (/"Actual","Equilibrium"/)
+res@xyExplicitLegendLabels = (/"GW_1-60","Anna's"/)
 ;res@trYMinF = 0
 
 pres             = True

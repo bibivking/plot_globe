@@ -5,14 +5,19 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 ;*******************************************
 
+;______ From Mark Decker's code ______
+setvalues NhlGetWorkspaceObjectId()
+  "wsMaximumSize" : 1000000000 ;
+end setvalues
+;_____________________________________
+
+
 begin
 
 case_name = (/\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off/Outputs/gw_off/",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs-standard/gw_off",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para_redistrb-on/Outputs-standard/gw_off",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs-Haverd2013/gw_off",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on/Outputs/gw_on/",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-standard/gw_on",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs-standard/gw_on",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-Haverd2013/gw_on",\
@@ -20,11 +25,9 @@ case_name = (/\
              /)
 
 case_name_brf = (/\
-              "off-default-std",\
               "off-std",\
               "off-redstrb-std",\
               "off-Hvrd",\
-              "on-default-std",\
               "on-std",\
               "on_norchrg-std",\
               "on-Hvrd",\
@@ -72,77 +75,73 @@ GRACE      = 0.
 uncertainty= 0.
 
 if grace_version .eq. "Original" then
-filename   = "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/plots/GRACE_JPL_RL06/GRCTellus.JPL.200204_201706.GLO.RL06M.MSCNv01CRIv01.nc"
-f          = addfile (filename,"r")
+   filename   = "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/plots/GRACE_JPL_RL06/GRCTellus.JPL.200204_201706.GLO.RL06M.MSCNv01CRIv01.nc"
+   f          = addfile (filename,"r")
 
-GRACE(0:4,:,:)       = dble2flt(f->lwe_thickness(7:11,:,:))*10.
-GRACE(6:95,:,:)      = dble2flt(f->lwe_thickness(12:101,:,:))*10.
+   GRACE(0:4,:,:)       = dble2flt(f->lwe_thickness(7:11,:,:))*10.
+   GRACE(6:95,:,:)      = dble2flt(f->lwe_thickness(12:101,:,:))*10.
 
-uncertainty(0:4,:,:) = dble2flt(f->uncertainty(7:11,:,:))*10.
-uncertainty(6:95,:,:)= dble2flt(f->uncertainty(12:101,:,:))*10.
+   uncertainty(0:4,:,:) = dble2flt(f->uncertainty(7:11,:,:))*10.
+   uncertainty(6:95,:,:)= dble2flt(f->uncertainty(12:101,:,:))*10.
 
-printVarSummary(GRACE)
-printVarSummary(uncertainty)
+   printVarSummary(GRACE)
+   printVarSummary(uncertainty)
 
-May_ave = new((/360,720/),float)
-Jun_ave = new((/360,720/),float)
-Jul_ave = new((/360,720/),float)
-May_ave = 0.
-Jun_ave = 0.
-Jul_ave = 0.
+   May_ave = new((/360,720/),float)
+   Jun_ave = new((/360,720/),float)
+   Jul_ave = new((/360,720/),float)
+   May_ave = 0.
+   Jun_ave = 0.
+   Jul_ave = 0.
 
-GRACE@_FillValue       = dble2flt(f->lwe_thickness@_FillValue)
-uncertainty@_FillValue = dble2flt(f->lwe_thickness@_FillValue)
+   GRACE@_FillValue       = dble2flt(f->lwe_thickness@_FillValue)
+   uncertainty@_FillValue = dble2flt(f->lwe_thickness@_FillValue)
 
-printVarSummary(GRACE)
-printVarSummary(uncertainty)
+   printVarSummary(GRACE)
+   printVarSummary(uncertainty)
 
-plot = gsn_csm_contour(wks,GRACE(0,:,:),res)
+   plot = gsn_csm_contour(wks,GRACE(0,:,:),res)
 
-do year = year_s+1,year_e
-print("add year :" + year)
-May_ave = May_ave + GRACE((year-year_s)*12+4,:,:)
-Jun_ave = Jun_ave + GRACE((year-year_s)*12+5,:,:)
-Jul_ave = Jul_ave + GRACE((year-year_s)*12+6,:,:)
-end do
+   do year = year_s+1,year_e
+      print("add year :" + year)   
+      May_ave = May_ave + GRACE((year-year_s)*12+4,:,:)
+      Jun_ave = Jun_ave + GRACE((year-year_s)*12+5,:,:)
+      Jul_ave = Jul_ave + GRACE((year-year_s)*12+6,:,:)
+   end do
 
-May_ave = May_ave/(year_e-year_s)
-Jun_ave = Jun_ave/(year_e-year_s)
-Jul_ave = Jul_ave/(year_e-year_s)
+   May_ave = May_ave/(year_e-year_s)
+   Jun_ave = Jun_ave/(year_e-year_s)
+   Jul_ave = Jul_ave/(year_e-year_s)
 
-plot = gsn_csm_contour(wks,May_ave,res)
-plot = gsn_csm_contour(wks,Jun_ave,res)
-plot = gsn_csm_contour(wks,Jul_ave,res)
+   plot = gsn_csm_contour(wks,May_ave,res)
+   plot = gsn_csm_contour(wks,Jun_ave,res)
+   plot = gsn_csm_contour(wks,Jul_ave,res)
 
-if use_month .eq. "Jul" then
-   GRACE(5,:,:) = GRACE(6,:,:) * (Jun_ave/Jul_ave)
-else if use_month .eq. "May" then
-   GRACE(5,:,:) = GRACE(4,:,:) * (Jun_ave/May_ave)
-end if
-end if
+   if use_month .eq. "Jul" then
+      GRACE(5,:,:) = GRACE(6,:,:) * (Jun_ave/Jul_ave)
+   else if use_month .eq. "May" then
+      GRACE(5,:,:) = GRACE(4,:,:) * (Jun_ave/May_ave)
+   end if
+   end if
 
-uncertainty(5,:,:) = (uncertainty(4,:,:) + uncertainty(6,:,:))/2.
+   uncertainty(5,:,:) = (uncertainty(4,:,:) + uncertainty(6,:,:))/2.
 
-delete(May_ave)
-delete(Jun_ave)
-delete(Jul_ave)
+   delete(May_ave)
+   delete(Jun_ave)
+   delete(Jul_ave)
 
-plot = gsn_csm_contour(wks,GRACE(5,:,:),res)
-plot = gsn_csm_contour(wks,uncertainty(5,:,:),res)
+   plot = gsn_csm_contour(wks,GRACE(5,:,:),res)
+   plot = gsn_csm_contour(wks,uncertainty(5,:,:),res)
 
 else if grace_version .eq. "Gap-fill" then
 
 do year = year_s,year_e
-
-filename   = "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/plots/GRACE_JPL_RL06/fill_gap_filter_singular_Sanaa/GRACERel06_lwe_"+ year+".nc"
-f          = addfile (filename,"r")
-
-a = (year-year_s)*12
-b = (year-year_s)*12+11
-
-GRACE(a:b,:,:)       = lonFlip(f->lwe)*10.
-uncertainty(a:b,:,:) = lonFlip(f->uncertainty)*10.
-
+   filename   = "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/plots/GRACE_JPL_RL06/fill_gap_filter_singular_Sanaa/GRACERel06_lwe_"+ year+".nc"
+   f          = addfile (filename,"r")
+   a = (year-year_s)*12
+   b = (year-year_s)*12+11
+   GRACE(a:b,:,:)       = lonFlip(f->lwe)*10.
+   uncertainty(a:b,:,:) = lonFlip(f->uncertainty)*10.
 end do
 
 printVarSummary(GRACE)
@@ -160,7 +159,6 @@ printVarSummary(uncertainty)
 plot = gsn_csm_contour(wks,GRACE(0,:,:),res)
 plot = gsn_csm_contour(wks,uncertainty(0,:,:),res)
 
-
 end if
 end if
 
@@ -171,11 +169,8 @@ TWS     = 0.0
 TWS_ave = 0.0
 
 do case_num = 0,case_sum-1
-
    print(case_name(case_num))
-
    counter = 0
-
    do year = year_s,year_e
       print("year = " +year)
 
@@ -194,10 +189,9 @@ do case_num = 0,case_sum-1
          counter = counter + 1
       end do ;month
    end do ;year
-
 end do ;case
 
-; Calculate 2003-2009 TWS average
+; Calculate 2004-2009 TWS average
 TWS_ave =  dim_avg_n_Wrap(TWS(:,12:83,:,:),1)
 
 ; Calculate TWS anormaly
@@ -228,25 +222,28 @@ plot = gsn_csm_contour(wks,GRACE(5,:,:),res)
 plot = gsn_csm_contour(wks,uncertainty(5,:,:),res)
 plot = gsn_csm_contour(wks,TWS(0,5,:,:),res)
 
+lat = f->Qle&y
+lon = f->Qle&x
+
 TWS!0 = "case"
 TWS!1 = "time"
 TWS!2 = "lat"
 TWS!3 = "lon"
-TWS&lat = f->Qle&y
-TWS&lon = f->Qle&x
+TWS&lat = lat
+TWS&lon = lon
 TWS@_FillValue   = f->Qle@_FillValue
 
 GRACE!0 = "time"
 GRACE!1 = "lat"
 GRACE!2 = "lon"
-GRACE&lat = f->Qle&y
-GRACE&lon = f->Qle&x
+GRACE&lat = lat
+GRACE&lon = lon
 
 uncertainty!0 = "time"
 uncertainty!1 = "lat"
 uncertainty!2 = "lon"
-uncertainty&lat = f->Qle&y
-uncertainty&lon = f->Qle&x
+uncertainty&lat = lat
+uncertainty&lon = lon
 
 ; ______________________________ Calculate Variance __________________________________
 print("calculate variance")
@@ -259,17 +256,23 @@ variance_diff  = 0.0
 do case_num = 0,case_sum-1
    variance_diff(case_num,:,:) = TWS_variance(case_num,:,:) - GRACE_variance
 end do
+
+GRACE_variance!0 = "lat"
+GRACE_variance!1 = "lon"
+GRACE_variance&lat = lat
+GRACE_variance&lon = lon
+
 variance_diff!0 = "case"
 variance_diff!1 = "lat"
 variance_diff!2 = "lon"
-variance_diff&lat = f->Qle&y
-variance_diff&lon = f->Qle&x
-variance_diff@_FillValue   = f->Qle@_FillValue
+variance_diff&lat = lat
+variance_diff&lon = lon
+variance_diff@_FillValue   = TWS@_FillValue
 
 ; ____________________________ Deseasonalize & Detrend ________________________________
 print("deseasonlize and detrend")
 GRACE = rmMonAnnCycTLL(GRACE) ; dimensioned time x lat x lon
-do case_num = 0,6
+do case_num = 0,case_sum-1
    TWS(case_num,:,:,:) = rmMonAnnCycTLL(TWS(case_num,:,:,:))
 end do
 
@@ -279,20 +282,21 @@ plot = gsn_csm_contour(wks,TWS(0,0,:,:),res)
 GRACE = dtrend_n(GRACE, True, 0)*1.0
 TWS   = dtrend_n(TWS,   True, 1)*1.0
 
-TWS!0 = "case"
-TWS!1 = "time"
-TWS!2 = "lat"
-TWS!3 = "lon"
-TWS&lat = f->Qle&y
-TWS&lon = f->Qle&x
-TWS@_FillValue   = f->Qle@_FillValue
+;TWS!0 = "case"
+;TWS!1 = "time"
+;TWS!2 = "lat"
+;TWS!3 = "lon"
+;TWS&lat = lat
+;TWS&lon = lon
+;TWS@_FillValue   = f->Qle@_FillValue
 
-GRACE!0 = "time"
-GRACE!1 = "lat"
-GRACE!2 = "lon"
-GRACE&lat = f->Qle&y
-GRACE&lon = f->Qle&x
+;GRACE!0 = "time"
+;GRACE!1 = "lat"
+;GRACE!2 = "lon"
+;GRACE&lat = lat
+;GRACE&lon = lon
 
+; ____________________________ Calculate year ________________________________
 GRACE_year = new((/8,360,720/),float)
 TWS_year   = new((/case_sum,8,360,720/),float)
 
@@ -309,15 +313,15 @@ TWS_year!0 = "case"
 TWS_year!1 = "time"
 TWS_year!2 = "lat"
 TWS_year!3 = "lon"
-TWS_year&lat = f->Qle&y
-TWS_year&lon = f->Qle&x
-TWS_year@_FillValue   = f->Qle@_FillValue
+TWS_year&lat = lat
+TWS_year&lon = lon
+TWS_year@_FillValue = TWS@_FillValue
 
 GRACE_year!0 = "time"
 GRACE_year!1 = "lat"
 GRACE_year!2 = "lon"
-GRACE_year&lat = f->Qle&y
-GRACE_year&lon = f->Qle&x
+GRACE_year&lat = lat
+GRACE_year&lon = lon
 
 plot = gsn_csm_contour(wks,GRACE_year(0,:,:),res)
 plot = gsn_csm_contour(wks,TWS_year(0,0,:,:),res)
@@ -329,7 +333,20 @@ print("fraction of IAV")
 GRACE_FIAV = new((/360,720/),float)
 TWS_FIAV   = new((/case_sum,360,720/),float)
 
-GRACE_FIAV = dim_variance_n_Wrap(GRACE_year,0)/dim_variance_n_Wrap(GRACE,0)
+GRACE_FIAV!0 = "lat"
+GRACE_FIAV!1 = "lon"
+GRACE_FIAV&lat = lat
+GRACE_FIAV&lon = lon
+GRACE_FIAV@_FillValue = TWS@_FillValue
+
+TWS_FIAV!0 = "case"
+TWS_FIAV!1 = "lat"
+TWS_FIAV!2 = "lon"
+TWS_FIAV&lat = lat
+TWS_FIAV&lon = lon
+TWS_FIAV@_FillValue = TWS@_FillValue
+
+GRACE_FIAV = dim_variance_n_Wrap(GRACE_year,0)/where(dim_variance_n_Wrap(GRACE,0) .ne. 0. ,dim_variance_n_Wrap(GRACE,0), TWS@_FillValue)
 TWS_FIAV   = dim_variance_n_Wrap(TWS_year,1)/where(dim_variance_n_Wrap(TWS,1) .ne. 0., dim_variance_n_Wrap(TWS,1), TWS@_FillValue)
 
 delete(GRACE_year)
@@ -340,17 +357,6 @@ delete(TWS)
 
 printVarSummary(GRACE_FIAV)
 printVarSummary(TWS_FIAV)
-
-GRACE_FIAV!0 = "lat"
-GRACE_FIAV!1 = "lon"
-GRACE_FIAV&lat = f->Qle&y
-GRACE_FIAV&lon = f->Qle&x
-
-TWS_FIAV!0 = "case"
-TWS_FIAV!1 = "lat"
-TWS_FIAV!2 = "lon"
-TWS_FIAV&lat = f->Qle&y
-TWS_FIAV&lon = f->Qle&x
 
 plot = gsn_csm_contour(wks,GRACE_FIAV(0,:,:),res)
 plot = gsn_csm_contour(wks,TWS_FIAV(0,:,:),res)
@@ -404,7 +410,7 @@ res@tmXBMode  = "Explicit"
 
 if scale .eq. "Global" then
   A = -90.
-  B = 90.
+  B = 60.
   C = 0.
   D = 360.
 else if scale .eq. "50S-N" then
@@ -435,7 +441,7 @@ res@trXMaxF   = D
 res@mpMinLonF = C
 res@mpMaxLonF = D
 
-if scale .eq. "World" then
+if scale .eq. "Global" then
    res@mpCenterLonF       = 160
    res@tmYLValues=(/60,30,0,-30,-60/)
    res@tmYLLabels=(/"60~S~o~N~N","30~S~o~N~N","0~S~o~N~","30~S~o~N~S","60~S~o~N~S"/)
@@ -479,7 +485,7 @@ pres@lbAutoManage       = False
 pres@lbTitleDirection   = "Across"             ; title direction
 pres@lbTitlePosition    = "Bottom";Right"
 
-plots = new(10,graphic)
+plots = new(8,graphic)
 
 ; ______________________ variance_diff _______________________
 ;levels = fspan(-10.,10.,21)
@@ -489,7 +495,7 @@ do case_num = 0,case_sum-1
    res@tiMainString = case_name_brf(case_num)
    plots(case_num) = gsn_csm_contour_map(wks,variance_diff(case_num,{A:B},{C:D}),res)
 end do
-gsn_panel(wks,(/plots/),(/5,2/),pres)
+gsn_panel(wks,(/plots(0:6)/),(/4,2/),pres)
 
 ; _______________________ fraction of IAV _____________________
 res@tiMainString = "GRACE_FIAV"
@@ -498,6 +504,6 @@ do case_num = 1,case_sum
    res@tiMainString = case_name_brf(case_num-1)+"_FIAV"
    plots(case_num) = gsn_csm_contour_map(wks,TWS_FIAV(case_num,{A:B},{C:D}),res)
 end do
-gsn_panel(wks,(/plots/),(/5,2/),pres)
+gsn_panel(wks,(/plots/),(/4,2/),pres)
 
 end

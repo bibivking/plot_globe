@@ -30,7 +30,7 @@ Soil_thickness = (/0.022, 0.058, 0.154, 0.409, 1.085, 2.872/) ; 6 soil layers
 
 
 ;______________________________ Data _________________________________
-year_s = 2001
+year_s = 1961
 year_e = 2010
 year_sum = year_e-year_s+1
 var_sum  = dimsizes(var_name)
@@ -100,23 +100,21 @@ gsn_define_colormap(wks,"rainbow")
 
 res                    = True
 res@gsnMaximize        = False
-res@gsnDraw            = False  ; Don't draw plots
-res@gsnFrame           = False  ; ?????
 
 res@vpHeightF          = 0.7
 res@vpWidthF           = 0.3
-;res@vpXF               = 0.0
-;res@vpYF               = 0.8
-res@pmLegendWidthF     = 0.15                      ; Resize legend width
-res@pmLegendHeightF    = 0.15                     ; and height
-res@pmLegendSide       = "Bottom"
+res@vpXF               = 0.2
+res@vpYF               = 0.9
+;res@pmLegendWidthF     = 0.30                      ; Resize legend width
+;res@pmLegendHeightF    = 0.15                     ; and height
+res@pmLegendSide       = "Right"
 res@tmXBLabelFontThicknessF = 0.015
 res@tmYLLabelFontThicknessF = 0.015
 res@tmXBLabelFontHeightF = 0.015
 res@tmYLLabelFontHeightF = 0.015
 
 pres                    = True                                      ; ???? panel resources.
-pres@gsnMaximize        = True
+pres@gsnMaximize        = True;False
 pres@gsnPanelLabelBar   = False                    ; ???? panel labelbar.
 pres@lbBoxLinesOn       = False                       ;???lbar box ????
 pres@lbTitleFont        = 25
@@ -126,7 +124,9 @@ pres@lbTitleFontHeightF = 0.5
 pres@lbLabelFontHeightF = 0.5
 pres@lbAutoManage       = True
 pres@lbTitleDirection   = "Across"             ; title direction
-pres@lbTitlePosition    = "Bottom";Right"
+pres@lbTitlePosition    = "Right";"Left";"Bottom";Right"
+
+
 
 
 plots = new(5,graphic)
@@ -135,6 +135,13 @@ res@xyLineThicknesses  = (/  2.0, 2.0, 2.0, 2.0, 2.0/)          ; make second li
 res@xyLineColors       = (/"blue","red","darkgreen","cyan","green"/)          ; change line color
 res@xyExplicitLegendLabels = (/"GW","Norecharge","NoGW","GW-CTL","NoGW-CTL"/)
 res@xyDashPatterns    = (/0,0,0,0,0/)
+
+res@gsnDraw            = True  ; Don't draw plots
+res@gsnFrame           = True  ; ?????
+plot = gsn_csm_xy(wks,var(:,0,:),f->y,res) ;_anomaly
+
+res@gsnDraw            = False  ; Don't draw plots
+res@gsnFrame           = False  ; ?????
 
 ;res@trYMinF = 0
 ;res@trYMaxF = 1.3*max(var(:,0,:))

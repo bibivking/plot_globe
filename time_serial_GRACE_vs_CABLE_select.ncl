@@ -16,21 +16,17 @@ begin
 case_name = (/\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs-standard/gw_off",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para_redistrb-on/Outputs-standard/gw_off",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs-Haverd2013/gw_off",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-standard/gw_on",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs-standard/gw_on",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-Haverd2013/gw_on",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs-Haverd2013/gw_on"\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-Haverd2013/gw_on"\
              /)
 
 case_name_brf = (/\
-              "off-std",\
-              "off-redstrb-std",\
-              "off-Hvrd",\
-              "on-std",\
-              "on_norchrg-std",\
-              "on-Hvrd",\
-              "on_norchrg-Hvrd"\
+              "NoGW",\
+              "NoGW_redstrb",\
+              "GW",\
+              "NoAQ",\
+              "GW_Hvrd"\
                /)
 
 Soil_thickness = (/0.022, 0.058, 0.154, 0.409, 1.085, 2.872/)
@@ -45,7 +41,7 @@ case_sum = dimsizes(case_name)
 ; ____________________________ Options _______________________________
 use_month    = "May" ; "Jul"
 no_greenland = True ;False ;True
-time_scale   = "annual" ; "annual"; "monthly"
+time_scale   = "monthly" ; "annual"; "monthly"
 grace_version= "Gap-fill" ;"Gap-fill"; "Original"
 scale        = "45S-N";"30S-N";"Global" ; "50S-N" ; "SE-AU" ; "AU"
 
@@ -238,7 +234,7 @@ do case_num = 0,case_sum-1
 
 end do ;case
 
-; Calculate 2003-2009 TWS average
+; Calculate 2004-2009 TWS average
 TWS_ave =  dim_avg_n_Wrap(TWS(:,12:83,:,:),1)
 
 ; Calculate TWS anormaly
@@ -289,6 +285,7 @@ uncertainty!2 = "lon"
 uncertainty&lat = f->Qle&y
 uncertainty&lon = f->Qle&x
 
+
 ; _________________________________  Zonal AVE  ______________________________________
 print("zonal average")
 GRACE_zonal_ave       = new((/lat_num,96/),float)
@@ -329,7 +326,6 @@ end do
 TWS_zonal_ave_multiyear(case_sum,:) = dim_avg_n_Wrap(GRACE_zonal_ave({A:B},:),1)
 print("finish zonal average")
 
-
 ; _________________________________  Global AVE  ______________________________________
 print("global average")
 GRACE_global_ave       = new((/3,96/),float)
@@ -341,6 +337,43 @@ TWS_global_ave         = 0.0
 
 GRACE_TWS              = new(case_sum,float)
 GRACE_TWS              = 0.0
+
+if scale .eq. "Global" then
+  A = -90.
+  B = 90.
+  C = 0.
+  D = 360.
+else if scale .eq. "30S-N" then
+  A = -30.
+  B = 30.
+  C = 0.
+  D = 360.
+else if scale .eq. "45S-N" then
+  A = -45.
+  B = 45.
+  C = 0.
+  D = 360.
+else if scale .eq. "50S-N" then
+  A = -50.
+  B = 50.
+  C = 0.
+  D = 360.
+else if scale .eq. "SE-AU" then
+  A = -40.
+  B = -27.
+  C = 140.
+  D = 155.
+else if scale .eq. "AU" then
+  A = -44.
+  B = -10.
+  C = 112.
+  D = 154.
+end if
+end if
+end if
+end if
+end if
+end if
 
 do time = 0,95
    GRACE_global_ave(0,time) = avg(GRACE(time,{A:B},{C:D}))
@@ -391,22 +424,25 @@ wks = gsn_open_wks("pdf",pic)
 gsn_define_colormap(wks,"WhiteBlueGreenYellowRed")
 
 pres                   = True
+pres@gsnMaximize        = False
 res                    = True              ; plot mods desired
 res@gsnDraw            = False             ; don't draw yet
 res@gsnFrame           = False             ; don't advance frame yet
+res@gsnMaximize        = False
 
 res@vpHeightF 	 = 0.4               ; change aspect ratio of plot
 res@vpWidthF 	   = 0.7
 
-res@tiYAxisString	 = "Total Water Storage Anormaly (mm)"              ; add an axis title
-res@txFontHeightF	 = 0.015            ; change title font heights
+res@tiMainString   = "(a) "
+res@tiYAxisString	 = "mm"              ; add an axis title
+res@txFontHeightF	 = 0.01            ; change title font heights
 
 res@trYMaxF = 70.
 res@trYMinF = -60.
 
-LineColors       = (/"darkgreen","darkgreen","limegreen","red","red","orange","orange"/) ; colors chosen
-LineThicknesses	 = (/2.,2.,2.,2.,2.,2.,2./)      ; line thicknesses
-DashPatterns	   = (/0.,1.,0.,0.,1.,0.,1./)      ; make all lines solid
+LineColors       = (/"darkgreen","green","red","pink","orange"/) ; colors chosen
+LineThicknesses	 = (/2.,2.,2.,2.,2./)      ; line thicknesses
+DashPatterns	   = (/0.,0.,0.,0.,0./)      ; make all lines solid
 
 if time_scale .eq. "monthly" then
   x = ispan(1,total,1)
@@ -420,19 +456,19 @@ if time_scale .eq. "monthly" then
   top_plot = gsn_csm_xy (wks,x,GRACE_global_ave(0,:),res)       ; create line plot
 
 ; Create a plot with the area between both curves filled in blue.
-  delete(res@xyLineColor)
+;  delete(res@xyLineColor)
 ;  res@gsnXYFillColors = "LightBlue"
 ;  res@xyLineColor     = -1                           ; We don't want the line, so make it transparent.
 ;  bot_plot  = gsn_csm_xy (wks,x,GRACE_global_ave(1:2,:),res)  ; Create filled XY plot.
 
 ; Create a plot with the area between both curves filled in pink.
-  delete(res@gsnXYFillColors)
+  ;delete(res@gsnXYFillColors)
   res@xyLineColors       = LineColors
   res@xyLineThicknesses  = LineThicknesses
   res@xyDashPatterns	   = DashPatterns
   mid_plot  = gsn_csm_xy (wks,x,TWS_global_ave,res)  ; Create another filled XY plot.
 
-   overlay(mid_plot,top_plot)
+  overlay(mid_plot,top_plot)
 ;  overlay(bot_plot,mid_plot)
 ;  overlay(bot_plot,top_plot)
 
@@ -450,10 +486,10 @@ else if time_scale .eq. "annual" then
   top_plot = gsn_csm_xy (wks,x,GRACE_global_ave_year(0,:),res)       ; create line plot
 
 ; Create a plot with the area between both curves filled in blue.
-;  delete(res@xyLineColor)
-;  res@gsnXYFillColors    = "LightBlue"
-;  res@xyLineColor        = -1                           ; We don't want the line, so make it transparent.
-;  bot_plot  = gsn_csm_xy (wks,x,GRACE_global_ave_year(1:2,:),res)  ; Create filled XY plot.
+  delete(res@xyLineColor)
+  res@gsnXYFillColors    = "LightBlue"
+  res@xyLineColor        = -1                           ; We don't want the line, so make it transparent.
+  bot_plot  = gsn_csm_xy (wks,x,GRACE_global_ave_year(1:2,:),res)  ; Create filled XY plot.
 
 ; Create a plot with the area between both curves filled in pink.
   delete(res@gsnXYFillColors)
@@ -462,9 +498,8 @@ else if time_scale .eq. "annual" then
   res@xyDashPatterns	   = DashPatterns
   mid_plot  = gsn_csm_xy (wks,x,TWS_global_ave_year,res)  ; Create another filled XY plot.
 
-   overlay(mid_plot,top_plot)
-;  overlay(bot_plot,mid_plot)
-;  overlay(bot_plot,top_plot)
+  overlay(bot_plot,mid_plot)
+  overlay(bot_plot,top_plot)
 ;  maximize_output(wks,pres)
 
 end if
@@ -473,8 +508,8 @@ end if
 ;*****************************************************
 ; Manually create and attach legend
 ;*****************************************************
-dum1 = new(8,graphic)
-dum2 = new(8,graphic)
+dum1 = new(6,graphic)
+dum2 = new(6,graphic)
 
 res_text                = True                  ; text mods desired
 res_text@txFontHeightF  = 0.013                ; change text size
@@ -492,7 +527,7 @@ do case_num = 0,case_sum
      res_lines@gsLineColor       = "blue"                                 ; change to blue
   end if
   
-  if case_num .eq. 7 then
+  if case_num .eq. 5 then
      point_xl = 1
      point_xr = 5
      point_xt = 5
@@ -520,15 +555,13 @@ do case_num = 0,case_sum
 end do
 maximize_output(wks,pres)
 
-
-
 res1 = True
 res1@gsnMaximize        = False
 
-res1@vpHeightF          = 0.7
+res1@vpHeightF          = 0.4
 res1@vpWidthF           = 0.3
-res1@vpXF               = 0.2
-res1@vpYF               = 0.9
+;res1@vpXF               = 0.2
+;res1@vpYF               = 0.9
 ;res@pmLegendWidthF     = 0.30                      ; Resize legend width
 ;res@pmLegendHeightF    = 0.15                     ; and height
 res1@pmLegendSide       = "Right"
@@ -537,17 +570,20 @@ res1@tmXBLabelFontThicknessF = 0.015
 res1@tmYRLabelFontThicknessF = 0.015
 res1@tmXBLabelFontHeightF = 0.015
 res1@tmYLLabelFontHeightF = 0.015
+res1@tiMainFontHeightF = 0.025
+res1@txFontHeightF	 = 0.025            ; change title font heights
 res1@tmYLMode  = "Explicit"
 res1@tmYLValues=(/45.,30,15,0,-15,-30,-45/)
 res1@tmYLLabels=(/"45~S~o~N~N","30~S~o~N~N","15~S~o~N~N","0~S~o~N~","15~S~o~N~S","30~S~o~N~S","45~S~o~N~S"/)
+res1@xyMonoLineColor    = False   
+res1@xyLineColors = (/"darkgreen","green","red","pink","orange","blue"/) ; colors chosen
+res1@xyLineThicknesses  = (/1.,1.,1.,1.,1.,1./) 
+res1@xyDashPatterns       = (/0.,0.,0.,0.,0.,0./)
+
 res1@trYMinF = -45.
 res1@trYMaxF = 45.
 
-res1@gsLineDashPattern = (/"darkgreen","darkgreen","limegreen","red","red","orange","orange","blue"/)
-res1@gsLineThicknessF  = (/2.,2.,2.,2.,2.,2.,2.,2/) 
-res1@gsLineColor       = (/0.,1.,0.,0.,1.,0.,1.,0/) 
-
-res1@tiMainString   = "(b) Total Water Storage Anormaly"
+res1@tiMainString   = "(b)"
 plot = gsn_csm_xy(wks,TWS_zonal_ave_multiyear,f->y({A:B}),res1) ;_anomaly
 
 

@@ -8,8 +8,8 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 begin
 
 case_name = (/\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-Haverd2013/gw_on",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs-Haverd2013/gw_on"\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-standard/gw_on",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-Haverd2013/gw_on"\
              /)
 
              ;"/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs/gw_off",\
@@ -31,12 +31,12 @@ var_name= (/\
            ;"LAI" ; the same in Groundwater_on and Groundwater_off
 
 Soil_thickness = (/0.022, 0.058, 0.154, 0.409, 1.085, 2.872/) ; 6 soil layers
-case_compare = "gw_on_Haverd2013_vs_gw_norecharge_Haverd2013"
-;month_name= (/"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"/)
-;season_name= (/"Spr","Sum","Aut","Win"/)
-time_scale = "all" ;"annual" ; "seasonal", "monthly", "all"
+case_compare = "gw_on_standard_vs_gw_norecharge_Haverd2013"
 
-;print(time_scale .eq. "seasonal")
+time_scale = "annual" ;"annual" ; "seasonal", "monthly", "all"
+
+; ____________________________ Options _______________________________
+scale = "AU" ;"AU" ;World
 
 ;______________________________ Data _________________________________
 year_s = 2001
@@ -153,7 +153,7 @@ Moist = Moist/year_sum
 TotSM = TotSM/year_sum
 
 ;_____________________________ PLOT ___________________________________
-pic = "GW_on_norecharge-"+time_scale+"-"+case_compare
+pic = "spital_map+diff_"+time_scale+"_"+case_compare+"_"+scale
 wks = gsn_open_wks("pdf",pic)
 gsn_define_colormap(wks,"WhiteBlueGreenYellowRed")
 ;"BlueWhiteOrangeRed") ;"BlueYellowRed")             ;����ɫ��
@@ -192,18 +192,39 @@ res@tmYLLabelFontThicknessF = 0.015
 res@tmXBLabelFontHeightF = 0.015
 res@tmYLLabelFontHeightF = 0.015
 
-res@trYMinF            = -60
-res@trYMaxF            = 80
-res@mpMinLatF          = -60
-res@mpMaxLatF          = 80
-res@mpCenterLonF       = 160
+if scale .eq. "World" then
+   res@trYMinF            = -60
+   res@trYMaxF            = 80
+   res@mpMinLatF          = -60
+   res@mpMaxLatF          = 80
+   res@mpCenterLonF       = 160
 
-res@tmYLMode  = "Explicit"             ;��Y����������������,��ʾ�Լ���Ҫ��ֵ
-res@tmYLValues=(/60,30,0,-30,-60/)
-res@tmYLLabels=(/"60~S~o~N~N","30~S~o~N~N","0~S~o~N~","30~S~o~N~S","60~S~o~N~S"/)
-res@tmXBMode  = "Explicit"
-res@tmXBValues=(/240,300,0,60,120,180/)
-res@tmXBLabels=(/"120~S~o~N~W","60~S~o~N~W","0~S~o~N~","60~S~o~N~E","120~S~o~N~E","180~S~o~N~"/)
+   res@tmYLMode  = "Explicit"             ;��Y����������������,��ʾ�Լ���Ҫ��ֵ
+   res@tmYLValues=(/60,30,0,-30,-60/)
+   res@tmYLLabels=(/"60~S~o~N~N","30~S~o~N~N","0~S~o~N~","30~S~o~N~S","60~S~o~N~S"/)
+   res@tmXBMode  = "Explicit"
+   res@tmXBValues=(/240,300,0,60,120,180/)
+   res@tmXBLabels=(/"120~S~o~N~W","60~S~o~N~W","0~S~o~N~","60~S~o~N~E","120~S~o~N~E","180~S~o~N~"/)
+else if scale .eq. "AU" then
+   res@gsnAddCyclic       = False
+   res@trYMinF            = -40
+   res@trYMaxF            = -27
+   res@mpMinLatF          = -40
+   res@mpMaxLatF          = -27
+   res@trXMinF            = 140
+   res@trXMaxF            = 155
+   res@mpMinLonF          = 140
+   res@mpMaxLonF          = 155
+
+   res@tmYLMode  = "Explicit"             ;��Y����������������,��ʾ�Լ���Ҫ��ֵ
+   res@tmYLValues=(/-30,-40/)
+   res@tmYLLabels=(/"30~S~o~N~S","40~S~o~N~S"/)
+   res@tmXBMode  = "Explicit"
+   res@tmXBValues=(/140,150/)
+   res@tmXBLabels=(/"140~S~o~N~E","150~S~o~N~E"/)
+end if
+end if
+
 
 ;**************** ͼ�������� *****************
 pres                    = True                                      ; ���� panel resources.
@@ -225,6 +246,9 @@ pres@lbTitlePosition    = "Bottom";Right"
 
 plots = new(3,graphic)
 
+
+if scale .eq. "World" then
+
 ; "Evap","TVeg","ESoil",\ ;"kg/m^2/s"
 do var_num = 0,2
   if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
@@ -233,9 +257,9 @@ do var_num = 0,2
       pres@txString = f->$var_name(var_num)$@long_name+"-Month "+month+" (mm/month)"
       levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
       res@cnLevels = levels
-      res@tiMainString = "(a) GW_off"
+      res@tiMainString = "(a) on_Hvrd"
       plots(0) = gsn_csm_contour_map(wks,var(0,month,var_num,:,:),res)
-      res@tiMainString = "(b) GW-off"
+      res@tiMainString = "(b) norchrg_Hvrd"
       plots(1) = gsn_csm_contour_map(wks,var(1,month,var_num,:,:),res)
       delete(levels)
       delete(res@cnLevels)
@@ -243,7 +267,7 @@ do var_num = 0,2
       levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
       ;levels = (/-20.,-18.,-16.,-14.,-12.,-10.,-8.,-6.,-4.,-2.,2.,4.,6.,8.,10.,12.,14.,16.,18.,20./)
       res@cnLevels = levels
-      res@tiMainString = "(c) GW_on - GW_off"
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
       plots(2) = gsn_csm_contour_map(wks,var(2,month,var_num,:,:),res)
       gsn_panel(wks,(/plots/),(/2,2/),pres)
       delete(levels)
@@ -256,16 +280,16 @@ do var_num = 0,2
       pres@txString = f->$var_name(var_num)$@long_name+"-Season "+season+" (mm/month)"
       levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
       res@cnLevels = levels
-      res@tiMainString = "(a) GW_off"
+      res@tiMainString = "(a) on_Hvrd"
       plots(0) = gsn_csm_contour_map(wks,var(0,11+season,var_num,:,:),res)
-      res@tiMainString = "(b) GW-off"
+      res@tiMainString = "(b) norchrg_Hvrd"
       plots(1) = gsn_csm_contour_map(wks,var(1,11+season,var_num,:,:),res)
       delete(levels)
       delete(res@cnLevels)
       res@cnFillPalette = "ViBlGrWhYeOrRe"
       levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
       res@cnLevels = levels
-      res@tiMainString = "(c) GW_on - GW_off"
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
       plots(2) = gsn_csm_contour_map(wks,var(2,11+season,var_num,:,:),res)
       gsn_panel(wks,(/plots/),(/2,2/),pres)
       delete(levels)
@@ -277,16 +301,16 @@ do var_num = 0,2
     pres@txString = f->$var_name(var_num)$@long_name+"-Annual (mm/month)"
     levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,16,var_num,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,16,var_num,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,16,var_num,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -302,16 +326,16 @@ do var_num = 3,4
       pres@txString = f->$var_name(var_num)$@long_name+"-Month "+month+" (mm/month)"
       levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
       res@cnLevels = levels
-      res@tiMainString = "(a) GW_off"
+      res@tiMainString = "(a) on_Hvrd"
       plots(0) = gsn_csm_contour_map(wks,var(0,month,var_num,:,:),res)
-      res@tiMainString = "(b) GW-off"
+      res@tiMainString = "(b) norchrg_Hvrd"
       plots(1) = gsn_csm_contour_map(wks,var(1,month,var_num,:,:),res)
       delete(levels)
       delete(res@cnLevels)
       res@cnFillPalette = "ViBlGrWhYeOrRe"
       levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
       res@cnLevels = levels
-      res@tiMainString = "(c) GW_on - GW_off"
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
       plots(2) = gsn_csm_contour_map(wks,var(2,month,var_num,:,:),res)
       gsn_panel(wks,(/plots/),(/2,2/),pres)
       delete(levels)
@@ -324,16 +348,16 @@ do var_num = 3,4
       pres@txString = f->$var_name(var_num)$@long_name+"-Season "+season+" (mm/month)"
       levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
       res@cnLevels = levels
-      res@tiMainString = "(a) GW_off"
+      res@tiMainString = "(a) on_Hvrd"
       plots(0) = gsn_csm_contour_map(wks,var(0,11+season,var_num,:,:),res)
-      res@tiMainString = "(b) GW-off"
+      res@tiMainString = "(b) norchrg_Hvrd"
       plots(1) = gsn_csm_contour_map(wks,var(1,11+season,var_num,:,:),res)
       delete(levels)
       delete(res@cnLevels)
       res@cnFillPalette = "ViBlGrWhYeOrRe"
       levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
       res@cnLevels = levels
-      res@tiMainString = "(c) GW_on - GW_off"
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
       plots(2) = gsn_csm_contour_map(wks,var(2,11+season,var_num,:,:),res)
       gsn_panel(wks,(/plots/),(/2,2/),pres)
       delete(levels)
@@ -345,16 +369,16 @@ do var_num = 3,4
     pres@txString = f->$var_name(var_num)$@long_name+"-Annual (mm/month)"
     levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,16,var_num,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,16,var_num,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,16,var_num,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -369,16 +393,16 @@ if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
     pres@txString = f->$var_name(5)$@long_name+"-Month "+month+" ("+f->$var_name(5)$@units+")"
     levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,month,5,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,month,5,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,month,5,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -391,16 +415,16 @@ if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
     pres@txString = f->$var_name(5)$@long_name+"-Season "+season+" ("+f->$var_name(5)$@units+")"
     levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,11+season,5,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,11+season,5,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,11+season,5,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -412,16 +436,16 @@ if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
   pres@txString = f->$var_name(5)$@long_name+"-Annual"+" ("+f->$var_name(5)$@units+")"
   levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
   res@cnLevels = levels
-  res@tiMainString = "(a) GW_off"
+  res@tiMainString = "(a) on_Hvrd"
   plots(0) = gsn_csm_contour_map(wks,var(0,16,5,:,:),res)
-  res@tiMainString = "(b) GW-off"
+  res@tiMainString = "(b) norchrg_Hvrd"
   plots(1) = gsn_csm_contour_map(wks,var(1,16,5,:,:),res)
   delete(levels)
   delete(res@cnLevels)
   res@cnFillPalette = "ViBlGrWhYeOrRe"
   levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
   res@cnLevels = levels
-  res@tiMainString = "(c) GW_on - GW_off"
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
   plots(2) = gsn_csm_contour_map(wks,var(2,16,5,:,:),res)
   gsn_panel(wks,(/plots/),(/2,2/),pres)
   delete(levels)
@@ -435,16 +459,16 @@ if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
     pres@txString = f->$var_name(6)$@long_name+"-Month "+month+" ("+f->$var_name(6)$@units+")"
     levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120.,110.,120.,130.,140.,150.,160,170.,180.,190.,200.,210.,220./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,month,6,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,month,6,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,month,6,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -457,16 +481,16 @@ if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
     pres@txString = f->$var_name(6)$@long_name+"-Season "+season+" ("+f->$var_name(6)$@units+")"
     levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120.,110.,120.,130.,140.,150.,160,170.,180.,190.,200.,210.,220./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,11+season,6,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,11+season,6,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,11+season,6,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -478,16 +502,16 @@ if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
   pres@txString = f->$var_name(6)$@long_name+"-Annual"+" ("+f->$var_name(6)$@units+")"
   levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120.,110.,120.,130.,140.,150.,160,170.,180.,190.,200.,210.,220./)
   res@cnLevels = levels
-  res@tiMainString = "(a) GW_off"
+  res@tiMainString = "(a) on_Hvrd"
   plots(0) = gsn_csm_contour_map(wks,var(0,16,6,:,:),res)
-  res@tiMainString = "(b) GW-off"
+  res@tiMainString = "(b) norchrg_Hvrd"
   plots(1) = gsn_csm_contour_map(wks,var(1,16,6,:,:),res)
   delete(levels)
   delete(res@cnLevels)
   res@cnFillPalette = "ViBlGrWhYeOrRe"
   levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
   res@cnLevels = levels
-  res@tiMainString = "(c) GW_on - GW_off"
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
   plots(2) = gsn_csm_contour_map(wks,var(2,16,6,:,:),res)
   gsn_panel(wks,(/plots/),(/2,2/),pres)
   delete(levels)
@@ -501,16 +525,16 @@ if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
     pres@txString = f->GPP@long_name+"-Month "+month+" ("+f->GPP@units+")"
     levels = (/1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,month,7,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,month,7,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,month,7,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -523,16 +547,16 @@ if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
     pres@txString = f->GPP@long_name+"-Season "+season+" ("+f->GPP@units+")"
     levels = (/1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,11+season,7,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,11+season,7,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,11+season,7,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -544,16 +568,16 @@ if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
   pres@txString = f->GPP@long_name+"-Annual"+" ("+f->GPP@units+")"
   levels = (/1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12./)
   res@cnLevels = levels
-  res@tiMainString = "(a) GW_off"
+  res@tiMainString = "(a) on_Hvrd"
   plots(0) = gsn_csm_contour_map(wks,var(0,16,7,:,:),res)
-  res@tiMainString = "(b) GW-off"
+  res@tiMainString = "(b) norchrg_Hvrd"
   plots(1) = gsn_csm_contour_map(wks,var(1,16,7,:,:),res)
   delete(levels)
   delete(res@cnLevels)
   res@cnFillPalette = "ViBlGrWhYeOrRe"
   levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
   res@cnLevels = levels
-  res@tiMainString = "(c) GW_on - GW_off"
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
   plots(2) = gsn_csm_contour_map(wks,var(2,16,7,:,:),res)
   gsn_panel(wks,(/plots/),(/2,2/),pres)
   delete(levels)
@@ -567,16 +591,16 @@ if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
     pres@txString = f->NPP@long_name+"-Month "+month+" ("+f->NPP@units+")"
     levels = (/-5.,-4.,-3.,-2.,-1.,1.,2.,3.,4.,5./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,month,8,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,month,8,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,month,8,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -589,16 +613,16 @@ if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
     pres@txString = f->NPP@long_name+"-Season "+season+" ("+f->NPP@units+")"
     levels = (/-5.,-4.,-3.,-2.,-1.,1.,2.,3.,4.,5./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,11+season,8,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,11+season,8,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,11+season,8,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -610,16 +634,16 @@ if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
   pres@txString = f->NPP@long_name+"-Annual"+" ("+f->NPP@units+")"
   levels = (/-5.,-4.,-3.,-2.,-1.,1.,2.,3.,4.,5./)
   res@cnLevels = levels
-  res@tiMainString = "(a) GW_off"
+  res@tiMainString = "(a) on_Hvrd"
   plots(0) = gsn_csm_contour_map(wks,var(0,16,8,:,:),res)
-  res@tiMainString = "(b) GW-off"
+  res@tiMainString = "(b) norchrg_Hvrd"
   plots(1) = gsn_csm_contour_map(wks,var(1,16,8,:,:),res)
   delete(levels)
   delete(res@cnLevels)
   res@cnFillPalette = "ViBlGrWhYeOrRe"
   levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
   res@cnLevels = levels
-  res@tiMainString = "(c) GW_on - GW_off"
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
   plots(2) = gsn_csm_contour_map(wks,var(2,16,8,:,:),res)
   gsn_panel(wks,(/plots/),(/2,2/),pres)
   delete(levels)
@@ -633,16 +657,16 @@ if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
     pres@txString = f->RadT@long_name+"-Month "+month+" (~S~o~N~C)"
     levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,month,9,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,month,9,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,month,9,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -655,16 +679,16 @@ if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
     pres@txString = f->RadT@long_name+"-Season "+season+" (~S~o~N~C)"
     levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,11+season,9,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,11+season,9,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,11+season,9,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -676,16 +700,16 @@ if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
   pres@txString = f->RadT@long_name+"-Annual"+" (~S~o~N~C)"
   levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
   res@cnLevels = levels
-  res@tiMainString = "(a) GW_off"
+  res@tiMainString = "(a) on_Hvrd"
   plots(0) = gsn_csm_contour_map(wks,var(0,16,9,:,:),res)
-  res@tiMainString = "(b) GW-off"
+  res@tiMainString = "(b) norchrg_Hvrd"
   plots(1) = gsn_csm_contour_map(wks,var(1,16,9,:,:),res)
   delete(levels)
   delete(res@cnLevels)
   res@cnFillPalette = "ViBlGrWhYeOrRe"
   levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
   res@cnLevels = levels
-  res@tiMainString = "(c) GW_on - GW_off"
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
   plots(2) = gsn_csm_contour_map(wks,var(2,16,9,:,:),res)
   gsn_panel(wks,(/plots/),(/2,2/),pres)
   delete(levels)
@@ -700,16 +724,16 @@ if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
     pres@txString = f->VegT@long_name+"-Month "+month+" (~S~o~N~C)"
     levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,month,10,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,month,10,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,month,10,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -722,16 +746,16 @@ if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
     pres@txString = f->VegT@long_name+"-Season "+season+" (~S~o~N~C)"
     levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,var(0,11+season,10,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,var(1,11+season,10,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,var(2,11+season,10,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -743,16 +767,16 @@ if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
   pres@txString = f->VegT@long_name+"-Annual"+" (~S~o~N~C)"
   levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
   res@cnLevels = levels
-  res@tiMainString = "(a) GW_off"
+  res@tiMainString = "(a) on_Hvrd"
   plots(0) = gsn_csm_contour_map(wks,var(0,16,10,:,:),res)
-  res@tiMainString = "(b) GW-off"
+  res@tiMainString = "(b) norchrg_Hvrd"
   plots(1) = gsn_csm_contour_map(wks,var(1,16,10,:,:),res)
   delete(levels)
   delete(res@cnLevels)
   res@cnFillPalette = "ViBlGrWhYeOrRe"
   levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
   res@cnLevels = levels
-  res@tiMainString = "(c) GW_on - GW_off"
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
   plots(2) = gsn_csm_contour_map(wks,var(2,16,10,:,:),res)
   gsn_panel(wks,(/plots/),(/2,2/),pres)
   delete(levels)
@@ -766,16 +790,16 @@ do layers = 0,6
       pres@txString = "The soil moisture of the "+(layers+1)+ " layer-Month "+month+" (m~S~3~N~/m~S~3~N~)"
       levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
       res@cnLevels = levels
-      res@tiMainString = "(a) GW_off"
+      res@tiMainString = "(a) on_Hvrd"
       plots(0) = gsn_csm_contour_map(wks,Moist(0,month,layers,:,:),res)
-      res@tiMainString = "(b) GW-off"
+      res@tiMainString = "(b) norchrg_Hvrd"
       plots(1) = gsn_csm_contour_map(wks,Moist(1,month,layers,:,:),res)
       delete(levels)
       delete(res@cnLevels)
       res@cnFillPalette = "ViBlGrWhYeOrRe"
       levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
       res@cnLevels = levels
-      res@tiMainString = "(c) GW_on - GW_off"
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
       plots(2) = gsn_csm_contour_map(wks,Moist(2,month,layers,:,:),res)
       gsn_panel(wks,(/plots/),(/2,2/),pres)
       delete(levels)
@@ -788,16 +812,16 @@ do layers = 0,6
       pres@txString = "The soil moisture of the "+(layers+1)+ " layer-Season "+season+" (m~S~3~N~/m~S~3~N~)"
       levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
       res@cnLevels = levels
-      res@tiMainString = "(a) GW_off"
+      res@tiMainString = "(a) on_Hvrd"
       plots(0) = gsn_csm_contour_map(wks,Moist(0,11+season,layers,:,:),res)
-      res@tiMainString = "(b) GW-off"
+      res@tiMainString = "(b) norchrg_Hvrd"
       plots(1) = gsn_csm_contour_map(wks,Moist(1,11+season,layers,:,:),res)
       delete(levels)
       delete(res@cnLevels)
       res@cnFillPalette = "ViBlGrWhYeOrRe"
       levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
       res@cnLevels = levels
-      res@tiMainString = "(c) GW_on - GW_off"
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
       plots(2) = gsn_csm_contour_map(wks,Moist(2,11+season,layers,:,:),res)
       gsn_panel(wks,(/plots/),(/2,2/),pres)
       delete(levels)
@@ -809,16 +833,16 @@ do layers = 0,6
     pres@txString = "The soil moisture of the "+(layers+1)+ " layer-Annual (m~S~3~N~/m~S~3~N~)"
     levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,Moist(0,16,layers,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,Moist(1,16,layers,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,Moist(2,16,layers,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -833,16 +857,16 @@ if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
     pres@txString = "Total Soil Moist-Month "+month+" (m~S~3~N~/m~S~3~N~)"
     levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,TotSM(0,month,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,TotSM(1,month,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,TotSM(2,month,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -855,16 +879,16 @@ if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
     pres@txString = "Total Soil Moist-Season "+season+" (m~S~3~N~/m~S~3~N~)"
     levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
     res@cnLevels = levels
-    res@tiMainString = "(a) GW_off"
+    res@tiMainString = "(a) on_Hvrd"
     plots(0) = gsn_csm_contour_map(wks,TotSM(0,11+season,:,:),res)
-    res@tiMainString = "(b) GW-off"
+    res@tiMainString = "(b) norchrg_Hvrd"
     plots(1) = gsn_csm_contour_map(wks,TotSM(1,11+season,:,:),res)
     delete(levels)
     delete(res@cnLevels)
     res@cnFillPalette = "ViBlGrWhYeOrRe"
     levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
     res@cnLevels = levels
-    res@tiMainString = "(c) GW_on - GW_off"
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
     plots(2) = gsn_csm_contour_map(wks,TotSM(2,11+season,:,:),res)
     gsn_panel(wks,(/plots/),(/2,2/),pres)
     delete(levels)
@@ -876,20 +900,694 @@ if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
     pres@txString = "Total Soil Moist-Annual (m~S~3~N~/m~S~3~N~)"
   levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
   res@cnLevels = levels
-  res@tiMainString = "(a) GW_off"
+  res@tiMainString = "(a) on_Hvrd"
   plots(0) = gsn_csm_contour_map(wks,TotSM(0,16,:,:),res)
-  res@tiMainString = "(b) GW-off"
+  res@tiMainString = "(b) norchrg_Hvrd"
   plots(1) = gsn_csm_contour_map(wks,TotSM(1,16,:,:),res)
   delete(levels)
   delete(res@cnLevels)
   res@cnFillPalette = "ViBlGrWhYeOrRe"
   levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
   res@cnLevels = levels
-  res@tiMainString = "(c) GW_on - GW_off"
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
   plots(2) = gsn_csm_contour_map(wks,TotSM(2,16,:,:),res)
   gsn_panel(wks,(/plots/),(/2,2/),pres)
   delete(levels)
   delete(res@cnLevels)
+end if
+
+else if scale .eq. "AU" then
+
+; _____________________________________ AU _____________________________________
+
+; "Evap","TVeg","ESoil",\ ;"kg/m^2/s"
+do var_num = 0,2
+  if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
+    do month = 0,11
+      res@cnFillPalette = "WhiteBlueGreenYellowRed"
+      pres@txString = f->$var_name(var_num)$@long_name+"-Month "+month+" (mm/month)"
+      levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
+      res@cnLevels = levels
+      res@tiMainString = "(a) on_Hvrd"
+      plots(0) = gsn_csm_contour_map(wks,var(0,month,var_num,{-40:-27},{140:155}),res)
+      res@tiMainString = "(b) norchrg_Hvrd"
+      plots(1) = gsn_csm_contour_map(wks,var(1,month,var_num,{-40:-27},{140:155}),res)
+      delete(levels)
+      delete(res@cnLevels)
+      res@cnFillPalette = "ViBlGrWhYeOrRe"
+      levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+      ;levels = (/-20.,-18.,-16.,-14.,-12.,-10.,-8.,-6.,-4.,-2.,2.,4.,6.,8.,10.,12.,14.,16.,18.,20./)
+      res@cnLevels = levels
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+      plots(2) = gsn_csm_contour_map(wks,var(2,month,var_num,{-40:-27},{140:155}),res)
+      gsn_panel(wks,(/plots/),(/2,2/),pres)
+      delete(levels)
+      delete(res@cnLevels)
+    end do
+  end if
+  if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
+    do season = 0,3
+      res@cnFillPalette = "WhiteBlueGreenYellowRed"
+      pres@txString = f->$var_name(var_num)$@long_name+"-Season "+season+" (mm/month)"
+      levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
+      res@cnLevels = levels
+      res@tiMainString = "(a) on_Hvrd"
+      plots(0) = gsn_csm_contour_map(wks,var(0,11+season,var_num,{-40:-27},{140:155}),res)
+      res@tiMainString = "(b) norchrg_Hvrd"
+      plots(1) = gsn_csm_contour_map(wks,var(1,11+season,var_num,{-40:-27},{140:155}),res)
+      delete(levels)
+      delete(res@cnLevels)
+      res@cnFillPalette = "ViBlGrWhYeOrRe"
+      levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+      res@cnLevels = levels
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+      plots(2) = gsn_csm_contour_map(wks,var(2,11+season,var_num,{-40:-27},{140:155}),res)
+      gsn_panel(wks,(/plots/),(/2,2/),pres)
+      delete(levels)
+      delete(res@cnLevels)
+    end do
+  end if
+  if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->$var_name(var_num)$@long_name+"-Annual (mm/month)"
+    levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,16,var_num,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,16,var_num,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,16,var_num,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end if
+end do
+
+; "Qs","Qsb" ;"kg/m^2/s"
+do var_num = 3,4
+  if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
+    do month = 0,11
+      res@cnFillPalette = "WhiteBlueGreenYellowRed"
+      pres@txString = f->$var_name(var_num)$@long_name+"-Month "+month+" (mm/month)"
+      levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
+      res@cnLevels = levels
+      res@tiMainString = "(a) on_Hvrd"
+      plots(0) = gsn_csm_contour_map(wks,var(0,month,var_num,{-40:-27},{140:155}),res)
+      res@tiMainString = "(b) norchrg_Hvrd"
+      plots(1) = gsn_csm_contour_map(wks,var(1,month,var_num,{-40:-27},{140:155}),res)
+      delete(levels)
+      delete(res@cnLevels)
+      res@cnFillPalette = "ViBlGrWhYeOrRe"
+      levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+      res@cnLevels = levels
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+      plots(2) = gsn_csm_contour_map(wks,var(2,month,var_num,{-40:-27},{140:155}),res)
+      gsn_panel(wks,(/plots/),(/2,2/),pres)
+      delete(levels)
+      delete(res@cnLevels)
+    end do
+  end if
+  if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
+    do season = 0,3
+      res@cnFillPalette = "WhiteBlueGreenYellowRed"
+      pres@txString = f->$var_name(var_num)$@long_name+"-Season "+season+" (mm/month)"
+      levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
+      res@cnLevels = levels
+      res@tiMainString = "(a) on_Hvrd"
+      plots(0) = gsn_csm_contour_map(wks,var(0,11+season,var_num,{-40:-27},{140:155}),res)
+      res@tiMainString = "(b) norchrg_Hvrd"
+      plots(1) = gsn_csm_contour_map(wks,var(1,11+season,var_num,{-40:-27},{140:155}),res)
+      delete(levels)
+      delete(res@cnLevels)
+      res@cnFillPalette = "ViBlGrWhYeOrRe"
+      levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+      res@cnLevels = levels
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+      plots(2) = gsn_csm_contour_map(wks,var(2,11+season,var_num,{-40:-27},{140:155}),res)
+      gsn_panel(wks,(/plots/),(/2,2/),pres)
+      delete(levels)
+      delete(res@cnLevels)
+    end do
+  end if
+  if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->$var_name(var_num)$@long_name+"-Annual (mm/month)"
+    levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,16,var_num,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,16,var_num,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,16,var_num,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end if
+end do
+
+; "Qle" "W/m^2"
+if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
+  do month = 0,11
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->$var_name(5)$@long_name+"-Month "+month+" ("+f->$var_name(5)$@units+")"
+    levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,month,5,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,month,5,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,month,5,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
+  do season = 0,3
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->$var_name(5)$@long_name+"-Season "+season+" ("+f->$var_name(5)$@units+")"
+    levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,11+season,5,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,11+season,5,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,11+season,5,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
+  res@cnFillPalette = "WhiteBlueGreenYellowRed"
+  pres@txString = f->$var_name(5)$@long_name+"-Annual"+" ("+f->$var_name(5)$@units+")"
+  levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120./)
+  res@cnLevels = levels
+  res@tiMainString = "(a) on_Hvrd"
+  plots(0) = gsn_csm_contour_map(wks,var(0,16,5,{-40:-27},{140:155}),res)
+  res@tiMainString = "(b) norchrg_Hvrd"
+  plots(1) = gsn_csm_contour_map(wks,var(1,16,5,{-40:-27},{140:155}),res)
+  delete(levels)
+  delete(res@cnLevels)
+  res@cnFillPalette = "ViBlGrWhYeOrRe"
+  levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+  res@cnLevels = levels
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+  plots(2) = gsn_csm_contour_map(wks,var(2,16,5,{-40:-27},{140:155}),res)
+  gsn_panel(wks,(/plots/),(/2,2/),pres)
+  delete(levels)
+  delete(res@cnLevels)
+end if
+
+; "Qh" ;"W/m^2"
+if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
+  do month = 0,11
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->$var_name(6)$@long_name+"-Month "+month+" ("+f->$var_name(6)$@units+")"
+    levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120.,110.,120.,130.,140.,150.,160,170.,180.,190.,200.,210.,220./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,month,6,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,month,6,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,month,6,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
+  do season = 0,3
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->$var_name(6)$@long_name+"-Season "+season+" ("+f->$var_name(6)$@units+")"
+    levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120.,110.,120.,130.,140.,150.,160,170.,180.,190.,200.,210.,220./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,11+season,6,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,11+season,6,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,11+season,6,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
+  res@cnFillPalette = "WhiteBlueGreenYellowRed"
+  pres@txString = f->$var_name(6)$@long_name+"-Annual"+" ("+f->$var_name(6)$@units+")"
+  levels = (/10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,110.,120.,110.,120.,130.,140.,150.,160,170.,180.,190.,200.,210.,220./)
+  res@cnLevels = levels
+  res@tiMainString = "(a) on_Hvrd"
+  plots(0) = gsn_csm_contour_map(wks,var(0,16,6,{-40:-27},{140:155}),res)
+  res@tiMainString = "(b) norchrg_Hvrd"
+  plots(1) = gsn_csm_contour_map(wks,var(1,16,6,{-40:-27},{140:155}),res)
+  delete(levels)
+  delete(res@cnLevels)
+  res@cnFillPalette = "ViBlGrWhYeOrRe"
+  levels = (/-25.,-20.,-15.,-10.,-5.,-2.,-1.,1.,2.,5.,10.,15.,20.,25./)
+  res@cnLevels = levels
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+  plots(2) = gsn_csm_contour_map(wks,var(2,16,6,{-40:-27},{140:155}),res)
+  gsn_panel(wks,(/plots/),(/2,2/),pres)
+  delete(levels)
+  delete(res@cnLevels)
+end if
+
+; "GPP"
+if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
+  do month = 0,11
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->GPP@long_name+"-Month "+month+" ("+f->GPP@units+")"
+    levels = (/1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,month,7,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,month,7,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,month,7,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
+  do season = 0,3
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->GPP@long_name+"-Season "+season+" ("+f->GPP@units+")"
+    levels = (/1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,11+season,7,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,11+season,7,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,11+season,7,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
+  res@cnFillPalette = "WhiteBlueGreenYellowRed"
+  pres@txString = f->GPP@long_name+"-Annual"+" ("+f->GPP@units+")"
+  levels = (/1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12./)
+  res@cnLevels = levels
+  res@tiMainString = "(a) on_Hvrd"
+  plots(0) = gsn_csm_contour_map(wks,var(0,16,7,{-40:-27},{140:155}),res)
+  res@tiMainString = "(b) norchrg_Hvrd"
+  plots(1) = gsn_csm_contour_map(wks,var(1,16,7,{-40:-27},{140:155}),res)
+  delete(levels)
+  delete(res@cnLevels)
+  res@cnFillPalette = "ViBlGrWhYeOrRe"
+  levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
+  res@cnLevels = levels
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+  plots(2) = gsn_csm_contour_map(wks,var(2,16,7,{-40:-27},{140:155}),res)
+  gsn_panel(wks,(/plots/),(/2,2/),pres)
+  delete(levels)
+  delete(res@cnLevels)
+end if
+
+;"NPP"
+if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
+  do month = 0,11
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->NPP@long_name+"-Month "+month+" ("+f->NPP@units+")"
+    levels = (/-5.,-4.,-3.,-2.,-1.,1.,2.,3.,4.,5./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,month,8,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,month,8,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,month,8,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
+  do season = 0,3
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->NPP@long_name+"-Season "+season+" ("+f->NPP@units+")"
+    levels = (/-5.,-4.,-3.,-2.,-1.,1.,2.,3.,4.,5./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,11+season,8,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,11+season,8,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,11+season,8,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
+  res@cnFillPalette = "WhiteBlueGreenYellowRed"
+  pres@txString = f->NPP@long_name+"-Annual"+" ("+f->NPP@units+")"
+  levels = (/-5.,-4.,-3.,-2.,-1.,1.,2.,3.,4.,5./)
+  res@cnLevels = levels
+  res@tiMainString = "(a) on_Hvrd"
+  plots(0) = gsn_csm_contour_map(wks,var(0,16,8,{-40:-27},{140:155}),res)
+  res@tiMainString = "(b) norchrg_Hvrd"
+  plots(1) = gsn_csm_contour_map(wks,var(1,16,8,{-40:-27},{140:155}),res)
+  delete(levels)
+  delete(res@cnLevels)
+  res@cnFillPalette = "ViBlGrWhYeOrRe"
+  levels = (/-1.0,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1./)
+  res@cnLevels = levels
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+  plots(2) = gsn_csm_contour_map(wks,var(2,16,8,{-40:-27},{140:155}),res)
+  gsn_panel(wks,(/plots/),(/2,2/),pres)
+  delete(levels)
+  delete(res@cnLevels)
+end if
+
+; "RadT"
+if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
+  do month = 0,11
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->RadT@long_name+"-Month "+month+" (~S~o~N~C)"
+    levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,month,9,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,month,9,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,month,9,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
+  do season = 0,3
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->RadT@long_name+"-Season "+season+" (~S~o~N~C)"
+    levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,11+season,9,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,11+season,9,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,11+season,9,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
+  res@cnFillPalette = "WhiteBlueGreenYellowRed"
+  pres@txString = f->RadT@long_name+"-Annual"+" (~S~o~N~C)"
+  levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
+  res@cnLevels = levels
+  res@tiMainString = "(a) on_Hvrd"
+  plots(0) = gsn_csm_contour_map(wks,var(0,16,9,{-40:-27},{140:155}),res)
+  res@tiMainString = "(b) norchrg_Hvrd"
+  plots(1) = gsn_csm_contour_map(wks,var(1,16,9,{-40:-27},{140:155}),res)
+  delete(levels)
+  delete(res@cnLevels)
+  res@cnFillPalette = "ViBlGrWhYeOrRe"
+  levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
+  res@cnLevels = levels
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+  plots(2) = gsn_csm_contour_map(wks,var(2,16,9,{-40:-27},{140:155}),res)
+  gsn_panel(wks,(/plots/),(/2,2/),pres)
+  delete(levels)
+  delete(res@cnLevels)
+end if
+
+
+;"VegT"
+if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
+  do month = 0,11
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->VegT@long_name+"-Month "+month+" (~S~o~N~C)"
+    levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,month,10,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,month,10,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,month,10,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
+  do season = 0,3
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = f->VegT@long_name+"-Season "+season+" (~S~o~N~C)"
+    levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,var(0,11+season,10,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,var(1,11+season,10,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,var(2,11+season,10,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
+  res@cnFillPalette = "WhiteBlueGreenYellowRed"
+  pres@txString = f->VegT@long_name+"-Annual"+" (~S~o~N~C)"
+  levels = (/5.,10.,15.,20.,25.,30.,35.,40./)
+  res@cnLevels = levels
+  res@tiMainString = "(a) on_Hvrd"
+  plots(0) = gsn_csm_contour_map(wks,var(0,16,10,{-40:-27},{140:155}),res)
+  res@tiMainString = "(b) norchrg_Hvrd"
+  plots(1) = gsn_csm_contour_map(wks,var(1,16,10,{-40:-27},{140:155}),res)
+  delete(levels)
+  delete(res@cnLevels)
+  res@cnFillPalette = "ViBlGrWhYeOrRe"
+  levels = (/-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6/)
+  res@cnLevels = levels
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+  plots(2) = gsn_csm_contour_map(wks,var(2,16,10,{-40:-27},{140:155}),res)
+  gsn_panel(wks,(/plots/),(/2,2/),pres)
+  delete(levels)
+  delete(res@cnLevels)
+end if
+
+do layers = 0,6
+  if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
+    do month = 0,11
+      res@cnFillPalette = "WhiteBlueGreenYellowRed"
+      pres@txString = "The soil moisture of the "+(layers+1)+ " layer-Month "+month+" (m~S~3~N~/m~S~3~N~)"
+      levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
+      res@cnLevels = levels
+      res@tiMainString = "(a) on_Hvrd"
+      plots(0) = gsn_csm_contour_map(wks,Moist(0,month,layers,{-40:-27},{140:155}),res)
+      res@tiMainString = "(b) norchrg_Hvrd"
+      plots(1) = gsn_csm_contour_map(wks,Moist(1,month,layers,{-40:-27},{140:155}),res)
+      delete(levels)
+      delete(res@cnLevels)
+      res@cnFillPalette = "ViBlGrWhYeOrRe"
+      levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
+      res@cnLevels = levels
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+      plots(2) = gsn_csm_contour_map(wks,Moist(2,month,layers,{-40:-27},{140:155}),res)
+      gsn_panel(wks,(/plots/),(/2,2/),pres)
+      delete(levels)
+      delete(res@cnLevels)
+    end do
+  end if
+  if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
+    do season = 0,3
+      res@cnFillPalette = "WhiteBlueGreenYellowRed"
+      pres@txString = "The soil moisture of the "+(layers+1)+ " layer-Season "+season+" (m~S~3~N~/m~S~3~N~)"
+      levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
+      res@cnLevels = levels
+      res@tiMainString = "(a) on_Hvrd"
+      plots(0) = gsn_csm_contour_map(wks,Moist(0,11+season,layers,{-40:-27},{140:155}),res)
+      res@tiMainString = "(b) norchrg_Hvrd"
+      plots(1) = gsn_csm_contour_map(wks,Moist(1,11+season,layers,{-40:-27},{140:155}),res)
+      delete(levels)
+      delete(res@cnLevels)
+      res@cnFillPalette = "ViBlGrWhYeOrRe"
+      levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
+      res@cnLevels = levels
+      res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+      plots(2) = gsn_csm_contour_map(wks,Moist(2,11+season,layers,{-40:-27},{140:155}),res)
+      gsn_panel(wks,(/plots/),(/2,2/),pres)
+      delete(levels)
+      delete(res@cnLevels)
+    end do
+  end if
+  if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = "The soil moisture of the "+(layers+1)+ " layer-Annual (m~S~3~N~/m~S~3~N~)"
+    levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,Moist(0,16,layers,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,Moist(1,16,layers,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,Moist(2,16,layers,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end if
+end do
+
+
+if (time_scale .eq. "monthly") .or. (time_scale .eq. "all") then
+  do month = 0,11
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = "Total Soil Moist-Month "+month+" (m~S~3~N~/m~S~3~N~)"
+    levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,TotSM(0,month,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,TotSM(1,month,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,TotSM(2,month,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "seasonal") .or. (time_scale .eq. "all") then
+  do season = 0,3
+    res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = "Total Soil Moist-Season "+season+" (m~S~3~N~/m~S~3~N~)"
+    levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
+    res@cnLevels = levels
+    res@tiMainString = "(a) on_Hvrd"
+    plots(0) = gsn_csm_contour_map(wks,TotSM(0,11+season,{-40:-27},{140:155}),res)
+    res@tiMainString = "(b) norchrg_Hvrd"
+    plots(1) = gsn_csm_contour_map(wks,TotSM(1,11+season,{-40:-27},{140:155}),res)
+    delete(levels)
+    delete(res@cnLevels)
+    res@cnFillPalette = "ViBlGrWhYeOrRe"
+    levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
+    res@cnLevels = levels
+    res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+    plots(2) = gsn_csm_contour_map(wks,TotSM(2,11+season,{-40:-27},{140:155}),res)
+    gsn_panel(wks,(/plots/),(/2,2/),pres)
+    delete(levels)
+    delete(res@cnLevels)
+  end do
+end if
+if (time_scale .eq. "annual") .or. (time_scale .eq. "all") then
+  res@cnFillPalette = "WhiteBlueGreenYellowRed"
+    pres@txString = "Total Soil Moist-Annual (m~S~3~N~/m~S~3~N~)"
+  levels = (/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.60,0.65,0.70/)
+  res@cnLevels = levels
+  res@tiMainString = "(a) on_Hvrd"
+  plots(0) = gsn_csm_contour_map(wks,TotSM(0,16,{-40:-27},{140:155}),res)
+  res@tiMainString = "(b) norchrg_Hvrd"
+  plots(1) = gsn_csm_contour_map(wks,TotSM(1,16,{-40:-27},{140:155}),res)
+  delete(levels)
+  delete(res@cnLevels)
+  res@cnFillPalette = "ViBlGrWhYeOrRe"
+  levels = (/-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,-0.02,0.02,0.05,0.1,0.15,0.2,0.25,0.3/)
+  res@cnLevels = levels
+  res@tiMainString = "(c) norchrg_Hvrd - on_Hvrd"
+  plots(2) = gsn_csm_contour_map(wks,TotSM(2,16,{-40:-27},{140:155}),res)
+  gsn_panel(wks,(/plots/),(/2,2/),pres)
+  delete(levels)
+  delete(res@cnLevels)
+end if
+
+end if
 end if
 
 end

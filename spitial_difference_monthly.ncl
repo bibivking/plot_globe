@@ -59,11 +59,11 @@ case_sum = dimsizes(case_name)
 
 scale = "Global" ;"Global" ; "50S-N" ; "SE-AU" ; "AU"
 
-var   = new((/case_sum,11,360,720/),float)
+var   = new((/case_sum,12,11,360,720/),float)
 var   = 0.0
-Moist = new((/case_sum,7,360,720/),float)
+Moist = new((/case_sum,12,7,360,720/),float)
 Moist = 0.0
-TotSM = new((/case_sum,360,720/),float)
+TotSM = new((/case_sum,12,360,720/),float)
 TotSM = 0.0
 
 do case_num = 0,case_sum-1
@@ -86,45 +86,49 @@ do year = year_s,year_e
     lon = f->Qle&x
 
     var!0 = "case"
-    var!1 = "var"
-    var!2 = "lat"
-    var!3 = "lon"
+    var!1 = "month"
+    var!2 = "var"
+    var!3 = "lat"
+    var!4 = "lon"
     var&lat = lat
     var&lon = lon
 
     Moist!0 = "case"
-    Moist!1 = "layer"
-    Moist!2 = "lat"
-    Moist!3 = "lon"
+    Moist!1 = "month"
+    Moist!2 = "layer"
+    Moist!3 = "lat"
+    Moist!4 = "lon"
     Moist&lat = lat
     Moist&lon = lon
 
     TotSM!0   = "case"
-    TotSM!1   = "lat"
-    TotSM!2   = "lon"
+    TotSM!1   = "month"
+    TotSM!2   = "lat"
+    TotSM!3   = "lon"
     TotSM&lat = lat
-    TotSM&lon = lon 
-    
+    TotSM&lon = lon
+
     var@_FillValue   = f->Qle@_FillValue
     Moist@_FillValue = f->Qle@_FillValue
     TotSM@_FillValue = f->Qle@_FillValue
 
     do var_num = 0,10
-       if (var_num .le. 4) then
+
+      if (var_num .le. 4) then
          do month = 0,11
-            var(case_num,var_num,:,:) = var(case_num,var_num,:,:) + f->$var_name(var_num)$(month,:,:)*3600*24*dom(month)
+            var(case_num,month,var_num,:,:) = var(case_num,month,var_num,:,:) + f->$var_name(var_num)$(month,:,:)*3600*24*dom(month)
          end do
-       else
-          var(case_num,var_num,:,:) = var(case_num,var_num,:,:) + dim_avg_n_Wrap(f->$var_name(var_num)$,0)
-       end if
+      else
+         var(case_num,:,var_num,:,:) = var(case_num,:,var_num,:,:) + f->$var_name(var_num)$
+      end if
     end do ;var_num
 
-    Moist(case_num,0:5,:,:) = Moist(case_num,0:5,:,:) + dim_avg_n_Wrap(f->SoilMoist,0)
-    Moist(case_num,6,:,:)   = Moist(case_num,6,:,:)   + dim_avg_n_Wrap(f->GWMoist,0)
+    Moist(case_num,:,0:5,:,:) = Moist(case_num,:,0:5,:,:) + f->SoilMoist
+    Moist(case_num,:,6,:,:)   = Moist(case_num,:,6,:,:)   + f->GWMoist
 
     do layers = 0,5
     ;  m3/m2
-        TotSM(case_num, :, :) = TotSM(case_num, :, :)+ Moist(case_num,layers,:,:)*Soil_thickness(layers)/sum(Soil_thickness)
+        TotSM(case_num, :, :, :) = TotSM(case_num,:, :, :)+ Moist(case_num,:,layers,:,:)*Soil_thickness(layers)/sum(Soil_thickness)
     end do
 
 end do ;year
@@ -132,68 +136,68 @@ end do ;year
 end do ;case
 
 var   = var/year_sum
-var(:,9:10,:,:) = var(:,9:10,:,:) -273.16
+var(:,:,9:10,:,:) = var(:,:,9:10,:,:) -273.16
 Moist = Moist/year_sum
 TotSM = TotSM/year_sum
 
-var_diff = new((/6,11,360,720/),float)
+var_diff = new((/6,12,11,360,720/),float)
 var_diff = 0.0
-Moist_diff = new((/6,7,360,720/),float)
-Moist_diff = 0.0
-TotSM_diff = new((/6,360,720/),float)
-TotSM_diff = 0.0
 
 var_diff!0 = "case"
-var_diff!1 = "var"
-var_diff!2 = "lat"
-var_diff!3 = "lon"
+var_diff!1 = "month"
+var_diff!2 = "var"
+var_diff!3 = "lat"
+var_diff!4 = "lon"
 var_diff&lat = lat
 var_diff&lon = lon
+var_diff@_FillValue   = f->Qle@_FillValue
 
+var_diff(0,:,:,:,:) = var(3,:,:,:,:) - var(0,:,:,:,:) ; 3 on-std - 0 off-std
+var_diff(1,:,:,:,:) = var(3,:,:,:,:) - var(4,:,:,:,:) ; 3 on-std - 4 on_norchrg-std
+var_diff(2,:,:,:,:) = var(1,:,:,:,:) - var(0,:,:,:,:) ; 1 off-redstrb-std - 0 off-std
+var_diff(3,:,:,:,:) = var(2,:,:,:,:) - var(0,:,:,:,:) ; 2 off-Hvrd - 0 off-std
+var_diff(4,:,:,:,:) = var(5,:,:,:,:) - var(3,:,:,:,:) ; 5 on-Hvrd - 3 on-std
+var_diff(5,:,:,:,:) = var(6,:,:,:,:) - var(4,:,:,:,:) ; 6 on_norchrg-Hvrd - 4 on_norchrg-std
+delete(var)
+
+Moist_diff = new((/6,12,7,360,720/),float)
+Moist_diff = 0.0
 Moist_diff!0 = "case"
-Moist_diff!1 = "layer"
-Moist_diff!2 = "lat"
-Moist_diff!3 = "lon"
+Moist_diff!1 = "month"
+Moist_diff!2 = "layer"
+Moist_diff!3 = "lat"
+Moist_diff!4 = "lon"
 Moist_diff&lat = lat
 Moist_diff&lon = lon
-
-TotSM_diff!0   = "case"
-TotSM_diff!1   = "lat"
-TotSM_diff!2   = "lon"
-TotSM_diff&lat = lat
-TotSM_diff&lon = lon 
-    
-var_diff@_FillValue   = f->Qle@_FillValue
 Moist_diff@_FillValue = f->Qle@_FillValue
+
+Moist_diff(0,:,:,:,:) = Moist(3,:,:,:,:) - Moist(0,:,:,:,:)
+Moist_diff(1,:,:,:,:) = Moist(3,:,:,:,:) - Moist(4,:,:,:,:)
+Moist_diff(2,:,:,:,:) = Moist(1,:,:,:,:) - Moist(0,:,:,:,:)
+Moist_diff(3,:,:,:,:) = Moist(2,:,:,:,:) - Moist(0,:,:,:,:)
+Moist_diff(4,:,:,:,:) = Moist(5,:,:,:,:) - Moist(3,:,:,:,:)
+Moist_diff(5,:,:,:,:) = Moist(6,:,:,:,:) - Moist(4,:,:,:,:)
+delete(Moist)
+
+TotSM_diff = new((/6,12,360,720/),float)
+TotSM_diff = 0.0
+TotSM_diff!0   = "case"
+TotSM_diff!1   = "month"
+TotSM_diff!2   = "lat"
+TotSM_diff!3   = "lon"
+TotSM_diff&lat = lat
+TotSM_diff&lon = lon
 TotSM_diff@_FillValue = f->Qle@_FillValue
-               
-var_diff(0,:,:,:) = var(3,:,:,:) - var(0,:,:,:) ; 3 on-std - 0 off-std
-var_diff(1,:,:,:) = var(3,:,:,:) - var(4,:,:,:) ; 3 on-std - 4 on_norchrg-std
-var_diff(2,:,:,:) = var(1,:,:,:) - var(0,:,:,:) ; 1 off-redstrb-std - 0 off-std
-var_diff(3,:,:,:) = var(2,:,:,:) - var(0,:,:,:) ; 2 off-Hvrd - 0 off-std
-var_diff(4,:,:,:) = var(5,:,:,:) - var(3,:,:,:) ; 5 on-Hvrd - 3 on-std
-var_diff(5,:,:,:) = var(6,:,:,:) - var(4,:,:,:) ; 6 on_norchrg-Hvrd - 4 on_norchrg-std
 
-Moist_diff(0,:,:,:) = Moist(3,:,:,:) - Moist(0,:,:,:)
-Moist_diff(1,:,:,:) = Moist(3,:,:,:) - Moist(4,:,:,:)
-Moist_diff(2,:,:,:) = Moist(1,:,:,:) - Moist(0,:,:,:)
-Moist_diff(3,:,:,:) = Moist(2,:,:,:) - Moist(0,:,:,:)
-Moist_diff(4,:,:,:) = Moist(5,:,:,:) - Moist(3,:,:,:)
-Moist_diff(5,:,:,:) = Moist(6,:,:,:) - Moist(4,:,:,:)
-
-TotSM_diff(0,:,:) = TotSM(3,:,:) - TotSM(0,:,:)
-TotSM_diff(1,:,:) = TotSM(3,:,:) - TotSM(4,:,:)
-TotSM_diff(2,:,:) = TotSM(1,:,:) - TotSM(0,:,:)
-TotSM_diff(3,:,:) = TotSM(2,:,:) - TotSM(0,:,:)
-TotSM_diff(4,:,:) = TotSM(5,:,:) - TotSM(3,:,:)
-TotSM_diff(5,:,:) = TotSM(6,:,:) - TotSM(4,:,:)
+TotSM_diff(0,:,:,:) = TotSM(3,:,:,:) - TotSM(0,:,:,:)
+TotSM_diff(1,:,:,:) = TotSM(3,:,:,:) - TotSM(4,:,:,:)
+TotSM_diff(2,:,:,:) = TotSM(1,:,:,:) - TotSM(0,:,:,:)
+TotSM_diff(3,:,:,:) = TotSM(2,:,:,:) - TotSM(0,:,:,:)
+TotSM_diff(4,:,:,:) = TotSM(5,:,:,:) - TotSM(3,:,:,:)
+TotSM_diff(5,:,:,:) = TotSM(6,:,:,:) - TotSM(4,:,:,:)
+delete(TotSM)
 
 ;_____________________________ PLOT ___________________________________
-pic = "spitial_difference_"+scale
-wks = gsn_open_wks("pdf",pic)
-gsn_define_colormap(wks,"WhiteBlueGreenYellowRed")
-;"BlueWhiteOrangeRed") ;"BlueYellowRed")             ;����ɫ��
-
 res                    = True
 res@cnFillMode         = "RasterFill"            ; Raster Mode
 res@cnFillOn           = True                            ;��ɫ
@@ -310,19 +314,25 @@ pres@lbLabelFontHeightF = 0.01
 
 plots = new(6,graphic)
 
+do month = 0,11
+
+pic = "spitial_difference_monthly-"+(month+1)+"_"+scale
+wks = gsn_open_wks("pdf",pic)
+gsn_define_colormap(wks,"WhiteBlueGreenYellowRed")
+;"BlueWhiteOrangeRed") ;"BlueYellowRed")             ;����ɫ��
+
 ; "Evap","TVeg","ESoil",\ ;"kg/m^2/s"
 do var_num = 0,2
 
-  pres@txString = f->$var_name(var_num)$@long_name+" (mm/year)"
+  pres@txString = f->$var_name(var_num)$@long_name+" (mm/mon)"
   res@cnFillPalette = "ViBlGrWhYeOrRe"
-  levels = (/-180,-160,-140,-120.,-100.,-80,-60.,-40.,-20.,0.,20,40.,60.,80,100,120,140,160,180/)
-  ;(/-100.,-90.,-80.,-70.,-60.,-50.,-40.,-30.,-20.,-10.,10.,20.,30.,40.,50.,60.,70.,80.,90.,100./)
+  levels = (/-50,-40,-30,-20.,-10.,0.,10,20.,30.,40,50/)
   res@cnLevels = levels
   pres@cnLevels = levels
   do plot_num = 0,5
      res@tiMainString = plot_name(plot_num)
-     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,var_num,:,:),res)
-  end do  
+     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,month,var_num,:,:),res)
+  end do
   gsn_panel(wks,(/plots/),(/3,2/),pres)
   delete(levels)
   delete(res@cnLevels)
@@ -331,16 +341,15 @@ end do
 
 ; "Qs","Qsb" ;"kg/m^2/s"
 ;do var_num = 3,4
-  pres@txString = "Runoff (mm/year)"
+  pres@txString = "Runoff (mm/mon)"
   res@cnFillPalette = "ViBlGrWhYeOrRe"
-  levels = (/-180,-160,-140,-120.,-100.,-80,-60.,-40.,-20.,0,20,40.,60.,80,100,120,140,160,180/)
-  ;levels = (/-80.,-70.,-60.,-50.,-40.,-30.,-20.,-10.,-5.,5.,10.,20.,30.,40.,50.,60.,70.,80./)
+  levels = (/-50,-40,-30,-20.,-10.,0.,10,20.,30.,40,50/)
   res@cnLevels = levels
-  pres@cnLevels = levels 
+  pres@cnLevels = levels
 
   do plot_num = 0,5
-     tmp = var_diff(plot_num,3,:,:)
-     tmp = tmp + var_diff(plot_num,4,:,:)
+     tmp = var_diff(plot_num,month,3,:,:)
+     tmp = tmp + var_diff(plot_num,month,4,:,:)
      res@tiMainString = plot_name(plot_num)
      plots(plot_num) = gsn_csm_contour_map(wks,tmp,res)
      delete(tmp)
@@ -360,7 +369,7 @@ end do
   pres@cnLevels = levels
   do plot_num = 0,5
      res@tiMainString = plot_name(plot_num)
-     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,5,:,:),res)
+     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,month,5,:,:),res)
   end do
   gsn_panel(wks,(/plots/),(/3,2/),pres)
   delete(levels)
@@ -376,7 +385,7 @@ end do
   pres@cnLevels = levels
   do plot_num = 0,5
      res@tiMainString = plot_name(plot_num)
-     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,6,:,:),res)
+     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,month,6,:,:),res)
   end do
   gsn_panel(wks,(/plots/),(/3,2/),pres)
   delete(levels)
@@ -392,7 +401,7 @@ end do
   pres@cnLevels= levels
   do plot_num = 0,5
      res@tiMainString = plot_name(plot_num)
-     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,7,:,:),res)
+     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,month,7,:,:),res)
   end do
   gsn_panel(wks,(/plots/),(/3,2/),pres)
   delete(levels)
@@ -408,7 +417,7 @@ end do
   pres@cnLevels = levels
   do plot_num = 0,5
      res@tiMainString = plot_name(plot_num)
-     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,9,:,:),res)
+     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,month,9,:,:),res)
   end do
   gsn_panel(wks,(/plots/),(/3,2/),pres)
   delete(levels)
@@ -420,11 +429,11 @@ end do
   pres@txString = f->VegT@long_name+" (~S~o~N~C)"
   levels = (/-3,-2.,-1.,-0.5,-0.2,0.2,0.5,1.,2.,3./)
   ;levels = (/-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5/)
-  res@cnLevels = levels  
+  res@cnLevels = levels
   pres@cnLevels = levels
   do plot_num = 0,5
      res@tiMainString = plot_name(plot_num)
-     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,10,:,:),res)
+     plots(plot_num) = gsn_csm_contour_map(wks,var_diff(plot_num,month,10,:,:),res)
   end do
   gsn_panel(wks,(/plots/),(/3,2/),pres)
   delete(levels)
@@ -440,14 +449,13 @@ do layers = 0,6
   pres@cnLevels = levels
   do plot_num = 0,5
      res@tiMainString = plot_name(plot_num)
-     plots(plot_num) = gsn_csm_contour_map(wks,Moist_diff(plot_num,layers,:,:),res)
+     plots(plot_num) = gsn_csm_contour_map(wks,Moist_diff(plot_num,month,layers,:,:),res)
   end do
   gsn_panel(wks,(/plots/),(/3,2/),pres)
   delete(levels)
   delete(res@cnLevels)
   delete(pres@cnLevels)
 end do
-
 
   pres@txString = "Soil moisture in 6 layers (m~S~3~N~/m~S~3~N~)"
   res@cnFillPalette = "ViBlGrWhYeOrRe"
@@ -456,10 +464,12 @@ end do
   pres@cnLevels = levels
   do plot_num = 0,5
      res@tiMainString = plot_name(plot_num)
-     plots(plot_num) = gsn_csm_contour_map(wks,TotSM_diff(plot_num,:,:),res)
+     plots(plot_num) = gsn_csm_contour_map(wks,TotSM_diff(plot_num,month,:,:),res)
   end do
   gsn_panel(wks,(/plots/),(/3,2/),pres)
   delete(levels)
   delete(res@cnLevels)
   delete(pres@cnLevels)
+end do
+
 end

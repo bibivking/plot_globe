@@ -18,13 +18,13 @@ case_name = (/\
              /)
 
 case_name_brf = (/\
-               "gw_off-standard",\
-               "gw_off-redistrb_on-standard",\
-               "gw_off-Haverd2013",\
-               "gw_on-standard",\
-               "gw_on_norecharge-standard",\
-               "gw_on-Haverd2013",\
-               "gw_on_norecharge-Haverd2013"\
+               "off-std",\
+               "off-redstrb-std",\
+               "off-Hvrd",\
+               "on-std",\
+               "on_norchrg-std",\
+               "on-Hvrd",\
+               "on_norchrg-Hvrd"\
                 /)
 
 var_name= (/\
@@ -37,10 +37,11 @@ var_name= (/\
 Soil_thickness = (/0.022, 0.058, 0.154, 0.409, 1.085, 2.872/) ; 6 soil layers and 1 aquifer
 
 ; ____________________________ Options _______________________________
-deseason = True
-scale    = "World";"AU" ; World
+deseason = True ;False ;
+scale    = "World";"World";"AU" ; World
+
 ;______________________________ Data _________________________________
-year_s = 2001
+year_s = 2001;1961
 year_e = 2010
 year_sum = year_e-year_s+1
 var_sum  = dimsizes(var_name)
@@ -54,6 +55,13 @@ res1@cnFillMode         = "RasterFill"            ; Raster Mode
 res1@cnFillOn           = True                            ;��ɫ
 res1@tmBorderThicknessF = 3.0
 res1@cnLinesOn          = False                       ; �رյ�ֵ������
+
+;_______________________________ PFT ___________________________________
+filename = case_name(0)+"/cable_out_"+year_s+".nc"
+f = addfile (filename,"r")
+iveg = f->iveg
+delete(f)
+delete(filename)
 
 ;______________________________ INPUT __________________________________
 std   = new((/7,360,720/),float)
@@ -75,9 +83,9 @@ do case_num = 0,6
       do layer = 0,5
         var(counter,:,:) = var(counter,:,:) + (f->SoilMoist(month,layer,:,:)*Soil_thickness(layer))*1000.
       end do
-      if case_num .ge. 3 then
-        var(counter,:,:) = var(counter,:,:) + (f->GWMoist(month,:,:)*f->GWdz)*1000.
-      end if
+;      if case_num .ge. 3 then
+;        var(counter,:,:) = var(counter,:,:) + (f->GWMoist(month,:,:)*f->GWdz)*1000.
+;      end if
       counter = counter + 1
     end do ;month
 
@@ -116,7 +124,11 @@ do case_num = 0,6
 end do ;case
 
 ;_____________________________ PLOT ___________________________________
-pic = "Standard_deviation_difference_"+var_name(0)+"_"+scale
+if deseason .eq. True then
+   pic = "Standard_deviation_difference_"+var_name(0)+"_"+scale+"_deseasonal_"+year_s+"-"+year_e
+else
+   pic = "Standard_deviation_difference_"+var_name(0)+"_"+scale+"_"+year_s+"-"+year_e
+end if
 wks = gsn_open_wks("pdf",pic)
 gsn_define_colormap(wks,"ViBlGrWhYeOrRe")
 ;"BlueWhiteOrangeRed") ;"BlueYellowRed")             ;����ɫ��
@@ -124,7 +136,7 @@ gsn_define_colormap(wks,"ViBlGrWhYeOrRe")
 res                    = True
 res@cnFillMode         = "RasterFill"            ; Raster Mode
 res@cnFillOn           = True                            ;��ɫ
-res@tmBorderThicknessF = 3.0
+res@tmBorderThicknessF = 2.0
 
 res@gsnDraw            = False  ; Don't draw plots
 res@gsnFrame           = False  ; ����ҳ
@@ -134,8 +146,8 @@ res@lbLabelBarOn       = True
 res@lbBoxLinesOn       = True                       ;�ر�lbar box ����
 res@lbTitleFont        = 25
 res@lbLabelFont        = 25
-res@lbTitleFontHeightF = 0.013
-res@lbLabelFontHeightF = 0.013
+res@lbTitleFontHeightF = 0.01
+res@lbLabelFontHeightF = 0.01
 res@txString           = ""
 res@tmXBLabelFont      = 25 ;Sets the font index for the bottom X-Axis labels.
 res@tmYLLabelFont      = 25
@@ -145,7 +157,7 @@ res@cnLinesOn          = False                       ; �رյ�ֵ�����
 res@cnLineColor        = "black"
 res@cnLineThicknessF   = 1.5
 res@cnLineLabelsOn     = False
-res@gsnMaximize        = True
+res@gsnMaximize        = False;True
 res@cnExplicitLabelBarLabelsOn = True   ;?
 res@cnLevelSelectionMode = "ExplicitLevels"
 
@@ -155,19 +167,38 @@ res@tmYLLabelFontThicknessF = 0.015
 res@tmXBLabelFontHeightF = 0.015
 res@tmYLLabelFontHeightF = 0.015
 
-res@trYMinF            = -60
-res@trYMaxF            = 80
-res@mpMinLatF          = -60
-res@mpMaxLatF          = 80
-res@mpCenterLonF       = 160
+if scale .eq. "World" then
+   res@trYMinF            = -60
+   res@trYMaxF            = 80
+   res@mpMinLatF          = -60
+   res@mpMaxLatF          = 80
+   res@mpCenterLonF       = 160
 
-res@tmYLMode  = "Explicit"             ;��Y����������������,��ʾ�Լ���Ҫ��ֵ
-res@tmYLValues=(/60,30,0,-30,-60/)
-res@tmYLLabels=(/"60~S~o~N~N","30~S~o~N~N","0~S~o~N~","30~S~o~N~S","60~S~o~N~S"/)
-res@tmXBMode  = "Explicit"
-res@tmXBValues=(/240,300,0,60,120,180/)
-res@tmXBLabels=(/"120~S~o~N~W","60~S~o~N~W","0~S~o~N~","60~S~o~N~E","120~S~o~N~E","180~S~o~N~"/)
+   res@tmYLMode  = "Explicit"             ;��Y����������������,��ʾ�Լ���Ҫ��ֵ
+   res@tmYLValues=(/60,30,0,-30,-60/)
+   res@tmYLLabels=(/"60~S~o~N~N","30~S~o~N~N","0~S~o~N~","30~S~o~N~S","60~S~o~N~S"/)
+   res@tmXBMode  = "Explicit"
+   res@tmXBValues=(/240,300,0,60,120,180/)
+   res@tmXBLabels=(/"120~S~o~N~W","60~S~o~N~W","0~S~o~N~","60~S~o~N~E","120~S~o~N~E","180~S~o~N~"/)
+else if scale .eq. "AU" then
+   res@gsnAddCyclic       = False
+   res@trYMinF            = -40
+   res@trYMaxF            = -27
+   res@mpMinLatF          = -40
+   res@mpMaxLatF          = -27
+   res@trXMinF            = 140
+   res@trXMaxF            = 155
+   res@mpMinLonF          = 140
+   res@mpMaxLonF          = 155
 
+   res@tmYLMode  = "Explicit"             ;��Y����������������,��ʾ�Լ���Ҫ��ֵ
+   res@tmYLValues=(/-30,-40/)
+   res@tmYLLabels=(/"30~S~o~N~S","40~S~o~N~S"/)
+   res@tmXBMode  = "Explicit"
+   res@tmXBValues=(/140,150/)
+   res@tmXBLabels=(/"140~S~o~N~E","150~S~o~N~E"/)
+end if
+end if
 ;**************** ͼ�������� *****************
 pres                    = True                                      ; ���� panel resources.
 pres@gsnMaximize        = True
@@ -189,7 +220,7 @@ pres@lbTitlePosition    = "Bottom";Right"
 plots = new(7,graphic)
 
 res@cnFillPalette = "ViBlGrWhYeOrRe"
-levels = (/-30.,-25.,-20,-15.,-10.,-5.,5.,10.,15.,20.,25.,30./)
+levels = (/-40.,-35.,-30.,-25.,-20,-15.,-10.,-5.,5.,10.,15.,20.,25.,30.,35.,40./)
 ;levels = (/20.,40.,60.,80.,100.,120.,140.,160.,180.,200./)
 res@cnLevels = levels
 
@@ -199,6 +230,10 @@ std(2,:,:) = std(2,:,:)-std(3,:,:)
 std(4,:,:) = std(4,:,:)-std(3,:,:)
 std(5,:,:) = std(5,:,:)-std(3,:,:)
 std(6,:,:) = std(6,:,:)-std(3,:,:)
+
+; ____________________ all PFT __________________________
+print("for all PFTs")
+
 counter = 0
 do case_num = 0,6
 if case_num .ne. 3 then
@@ -213,8 +248,60 @@ if case_num .ne. 3 then
   end if
   counter = counter + 1
 end if
-
 end do
 gsn_panel(wks,(/plots(0:5)/),(/3,2/),pres)
+
+; tmp var
+tmp   = new((/7,360,720/),float)
+tmp   = 0.0
+tmp!0 = "case"
+tmp!1 = "lat"
+tmp!2 = "lon"
+tmp&lat = f->Qle&y
+tmp&lon = f->Qle&x
+tmp@_FillValue   = f->Qle@_FillValue
+
+; _______________ forest _______________
+print("for forest")
+counter = 0
+pres@txString = "forest"
+do case_num = 0,6
+  tmp(case_num,:,:) = where(iveg .ge. 1 .and. iveg .le. 4, std(case_num,:,:), std@_FillValue )
+  if case_num .ne. 3 then
+    res@tiMainString = case_name_brf(case_num)+" - "+ case_name_brf(3)
+    if scale .eq. "AU" then
+      print(case_name_brf(case_num)+" "+avg(tmp(case_num,{-40:-27},{140:155})))
+      plots(counter) = gsn_csm_contour_map(wks,tmp(case_num,{-40:-27},{140:155}),res)
+    else if scale .eq. "World" then
+      print(case_name_brf(case_num)+" "+avg(tmp(case_num,:,:)))
+      plots(counter) = gsn_csm_contour_map(wks,tmp(case_num,:,:),res)
+    end if
+    end if
+    counter = counter + 1
+  end if
+end do
+gsn_panel(wks,(/plots(0:5)/),(/3,2/),pres)
+
+; _______________ grass+shrub+crop _______________
+print("for grass+shrub+crop")
+counter = 0
+pres@txString = "grass+shrub+crop"
+do case_num = 0,6
+  tmp(case_num,:,:) = where(iveg .ge. 5 .and. iveg .le. 11, std(case_num,:,:), std@_FillValue )
+  if case_num .ne. 3 then
+    res@tiMainString = case_name_brf(case_num)+" - "+ case_name_brf(3)
+    if scale .eq. "AU" then
+      print(case_name_brf(case_num)+" "+avg(tmp(case_num,{-40:-27},{140:155})))
+      plots(counter) = gsn_csm_contour_map(wks,tmp(case_num,{-40:-27},{140:155}),res)
+    else if scale .eq. "World" then
+      print(case_name_brf(case_num)+" "+avg(tmp(case_num,:,:)))
+      plots(counter) = gsn_csm_contour_map(wks,tmp(case_num,:,:),res)
+    end if
+    end if
+    counter = counter + 1
+  end if
+end do
+gsn_panel(wks,(/plots(0:5)/),(/3,2/),pres)
+
 
 end

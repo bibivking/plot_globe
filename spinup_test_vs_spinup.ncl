@@ -9,9 +9,9 @@ begin
 
 
 case_name = (/\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_debug/Outputs/gw_on",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_unify_para/Outputs-standard/gw_on",\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off_unify_para/Outputs-standard/gw_off",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_off/Outputs/gw_off",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_spinup/Outputs_181-240/gw_on",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on/Outputs/gw_on",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_no_aquifer_influence_unify_para/Outputs-standard/gw_on"\
             /)
              ; 
@@ -229,18 +229,20 @@ SMP  = 0.0
 
 do year = year_s,year_e
    print("year = " +year)
-   filename = case_name(0)+"/cable_out_"+year+".nc"
-   f = addfile (filename,"r")
+   filename0 = case_name(1)+"/cable_out_"+year+".nc"
+   f0 = addfile (filename0,"r")
+
+   filename1 = case_name(2)+"/cable_out_"+year+".nc"
+   f1 = addfile (filename1,"r")
 
    time_s = (year-year_s)*12
    time_e = (year-year_s)*12 + 11
-   wb(0,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->SoilMoist(:,:,{A:B},{C:D}),3),2)  ; Actual
-   wb(0,time_s:time_e,6) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->GWMoist(:,{A:B},{C:D}),2),1)        ; Equilibrium
-   wb(1,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->wbeq(:,:,{A:B},{C:D}),3),2)       ; Actual
-   wb(1,time_s:time_e,6) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->GWwbeq(:,{A:B},{C:D}),2),1)         ; Equilibrium
-   SMP(0,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->SMP(:,:,{A:B},{C:D}),3),2)       ; Actual
-   SMP(1,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->zq(:,:,{A:B},{C:D}),3),2)        ; Equilibrium
-   SMP(1,time_s:time_e,6) = dim_avg_n_Wrap(dim_avg_n_Wrap(f->GWzq(:,{A:B},{C:D}),2),1)          ; Equilibrium
+   wb(0,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f0->SoilMoist(:,:,{A:B},{C:D}),3),2)  ; Actual
+   wb(0,time_s:time_e,6)   = dim_avg_n_Wrap(dim_avg_n_Wrap(f0->GWMoist(:,{A:B},{C:D}),2),1)        ; Equilibrium
+   wb(1,time_s:time_e,0:5) = dim_avg_n_Wrap(dim_avg_n_Wrap(f1->SoilMoist(:,:,{A:B},{C:D}),3),2)       ; Actual
+   wb(1,time_s:time_e,6)   = dim_avg_n_Wrap(dim_avg_n_Wrap(f1->GWMoist(:,{A:B},{C:D}),2),1)         ; Equilibrium
+   SMP(0,time_s:time_e,0:5)= dim_avg_n_Wrap(dim_avg_n_Wrap(f0->SMP(:,:,{A:B},{C:D}),3),2)       ; Actual
+   SMP(1,time_s:time_e,0:5)= dim_avg_n_Wrap(dim_avg_n_Wrap(f1->SMP(:,:,{A:B},{C:D}),3),2)        ; Equilibrium
 end do ;year
 
 printVarSummary(wb)
@@ -255,7 +257,7 @@ SMP@_FillValue  = f->Qle@_FillValue
 ;_____________________________ PLOT ___________________________________
 x = ispan(year_s,year_e,1)
 print(x)
-pic = "Spinup_check_"+scale
+pic = "Spinup_check_vs_spinup_"+scale
 wks = gsn_open_wks("pdf",pic)
 gsn_define_colormap(wks,"rainbow")
 ;"BlueWhiteOrangeRed") ;"BlueYellowRed")             ;����ɫ��
@@ -272,7 +274,7 @@ res@pmLegendHeightF    = 0.11                     ; and height
 res@xyLineThicknesses  = (/  1.0, 1.0, 1.0, 1.0, 1.0, 1.0,1.0/)          ; make second line thicker
 res@pmLegendDisplayMode = "Always"
 res@xyLineColors       = (/"blue","red","green","orange","red","red","red"/)          ; change line color
-res@xyExplicitLegendLabels = (/"Debug","GW","NoGW","NoAQ"/)
+res@xyExplicitLegendLabels = (/"NoGW","GW_181-240","GW_1-60","NoAQ"/)
 ;res@trYMinF = 0
 
 
@@ -319,7 +321,7 @@ delete(wks)
 ;____________________________ PLOT Soil Equilibrium ____________________________
 x = ispan(1,total,1)
 print(x)
-pic = "Spinup_check_Soil_Equilibrium_"+scale
+pic = "Spinup_check_Soil_Equilibrium_vs_spinup_"+scale
 wks = gsn_open_wks("pdf",pic)
 gsn_define_colormap(wks,"rainbow")
 
@@ -335,7 +337,7 @@ res@pmLegendHeightF    = 0.11                     ; and height
 res@pmLegendDisplayMode    = "Always"
 res@xyLineThicknesses      = (/1.0,1.0/)         ; make second line thicker
 res@xyLineColors           = (/"blue","red"/)
-res@xyExplicitLegendLabels = (/"Actual","Equilibrium"/)
+res@xyExplicitLegendLabels = (/"GW_181-240","GW_1-60"/)
 ;res@trYMinF = 0
 
 pres             = True
