@@ -194,7 +194,7 @@ do case_num = 0,case_sum-1
 
          do layers = 0,5
             Moist(case_num,layers,year-year_s) = Moist(case_num,layers,year-year_s) \
-                                               + avg(f->SoilMoistIce(month,layers,{A:B},{C:D}))/12.
+                                               + avg(f->SoilMoist(month,layers,{A:B},{C:D}))/12.
             SoilTemp(case_num,layers,year-year_s) = SoilTemp(case_num,layers,year-year_s) \
                                                + avg(f->SoilTemp(month,layers,{A:B},{C:D}))/12.
 
@@ -297,7 +297,7 @@ end do
 
 do layers = 0,6
 ;  res@trYMaxF = 1.3*max(Moist(:,layers,:))
-  res@tiYAxisString  = "The soil ice moisture of the "+(layers+1)+ " layer (m~S~3~N~/m~S~3~N~)"
+  res@tiYAxisString  = "The soil moisture of the "+(layers+1)+ " layer (m~S~3~N~/m~S~3~N~)"
   res@tiXAxisString  = "Year"
   plot = gsn_csm_xy(wks,x,Moist(:,layers,:),res)
 end do

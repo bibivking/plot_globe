@@ -8,10 +8,11 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 begin
 
 case_name = (/\
-              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_spinup/Outputs_181-240/gw_on",\
+              "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_debug/Outputs/gw_on",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on/Outputs/gw_on",\
               "/short/w35/mm3972/cable/runs/Marks_latest_branch_with_fixes/GSWP3_gw_on_debug/Outputs/gw_on"\
               /)
+              
 case_name_brf = (/\
               "GW",\
               "CLASS",\
@@ -289,7 +290,7 @@ SoilMoist_dif = SoilMoist_dif/year_sum
 
 
 ;_____________________________ PLOT ___________________________________
-pic = "spitial_map_debug_LH_vs_spinup_"+scale+"_"+time_scale
+pic = "spitial_map_debug_LH_vs_debug-tk-tvrad_"+scale+"_"+time_scale
 wks = gsn_open_wks("pdf",pic)
 gsn_define_colormap(wks,"WhiteBlueGreenYellowRed")
 ;"BlueWhiteOrangeRed") ;"BlueYellowRed")             ;����ɫ��
@@ -414,13 +415,13 @@ pres@lbLabelFontHeightF = 0.01
   res@cnFillPalette = "WhiteBlueGreenYellowRed"
   levels = fspan(-100,250,36)
   res@cnLevels = levels
-  res@tiMainString = "(a) GW_181-240 Rnet (W/m~S~2~N~)"
+  res@tiMainString = "(a) Debug_tk Rnet (W/m~S~2~N~)"
   plots(0) = gsn_csm_contour_map(wks,CABLE(0,{A:B},{C:D}),res)
-  res@tiMainString = "(c) GW_181-240 Qh (W/m~S~2~N~)"
+  res@tiMainString = "(c) Debug_tk Qh (W/m~S~2~N~)"
   plots(2) = gsn_csm_contour_map(wks,CABLE(1,{A:B},{C:D}),res)
-  res@tiMainString = "(e) GW_181-240 Qg (W/m~S~2~N~)"
+  res@tiMainString = "(e) Debug_tk Qg (W/m~S~2~N~)"
   plots(4) = gsn_csm_contour_map(wks,CABLE(2,{A:B},{C:D}),res)
-  res@tiMainString = "(g) GW_181-240 Qle (W/m~S~2~N~)"
+  res@tiMainString = "(g) Debug_tk Qle (W/m~S~2~N~)"
   plots(6) = gsn_csm_contour_map(wks,CABLE(3,{A:B},{C:D}),res)
 
   delete(levels)
@@ -428,7 +429,7 @@ pres@lbLabelFontHeightF = 0.01
 
   levels = fspan(0,1,21)
   res@cnLevels = levels
-  res@tiMainString = "(i) GW_181-240 Fsoil (-)"
+  res@tiMainString = "(i) Debug_tk Fsoil (-)"
   plots(8) = gsn_csm_contour_map(wks,CABLE(4,{A:B},{C:D}),res)
 
   delete(levels)
@@ -439,7 +440,7 @@ pres@lbLabelFontHeightF = 0.01
   res@cnFillPalette = "ViBlGrWhYeOrRe"
   levels = fspan(-40.,40.,41)
   res@cnLevels = levels
-  res@tiMainString = "(b) Rnet_dif (60 - 240)(W/m~S~2~N~)"
+  res@tiMainString = "(b) Rnet_dif (Debug_tk - GW)(W/m~S~2~N~)"
   plots(1) = gsn_csm_contour_map(wks,CABLE_dif(0,{A:B},{C:D}),res)
   res@tiMainString = "(d) Qh_dif (W/m~S~2~N~)"
   plots(3) = gsn_csm_contour_map(wks,CABLE_dif(1,{A:B},{C:D}),res)
@@ -476,15 +477,15 @@ else
 end if
   res@cnFillPalette = "WhiteBlueGreenYellowRed"
   res@cnLevels = levels
-  res@tiMainString = "(a) GW_181-240 Evap " + unit
+  res@tiMainString = "(a) Debug_tk Evap " + unit
   plots(0) = gsn_csm_contour_map(wks,CABLE(7,{A:B},{C:D}),res)
-  res@tiMainString = "(c) GW_181-240 TVeg " + unit
+  res@tiMainString = "(c) Debug_tk TVeg " + unit
   plots(2) = gsn_csm_contour_map(wks,CABLE(8,{A:B},{C:D}),res)
-  res@tiMainString = "(e) GW_181-240 ESoil " + unit
+  res@tiMainString = "(e) Debug_tk ESoil " + unit
   plots(4) = gsn_csm_contour_map(wks,CABLE(9,{A:B},{C:D}),res)
-  res@tiMainString = "(g) GW_181-240 Qs " + unit
+  res@tiMainString = "(g) Debug_tk Qs " + unit
   plots(6) = gsn_csm_contour_map(wks,CABLE(10,{A:B},{C:D}),res)
-  res@tiMainString = "(i) GW_181-240 Qsb " + unit
+  res@tiMainString = "(i) Debug_tk Qsb " + unit
   plots(8) = gsn_csm_contour_map(wks,CABLE(11,{A:B},{C:D}),res)
 
 
@@ -500,7 +501,7 @@ else
 end if
   res@cnFillPalette = "ViBlGrWhYeOrRe"
   res@cnLevels = levels
-  res@tiMainString = "(b) Evap_dif (60 - 240)"+unit
+  res@tiMainString = "(b) Evap_dif (Debug_tk - GW)"+unit
   plots(1) = gsn_csm_contour_map(wks,CABLE_dif(7,{A:B},{C:D}),res)
   res@tiMainString = "(d) TVeg_dif "+unit
   plots(3) = gsn_csm_contour_map(wks,CABLE_dif(8,{A:B},{C:D}),res)

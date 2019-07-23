@@ -1,0 +1,11 @@
+*.o
+AU_World.xlsx
+GRACE_JPL_RL06/*
+plots_backup/*
+figures/*
+PDSI/*
+GRACE/*
+*.nc
+*.pdf
+*.png
+*.jpg
